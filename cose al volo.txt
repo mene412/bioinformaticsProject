@@ -1,3 +1,7 @@
 su bash per creare un file samplato, chiesto a chatGPT
 
 awk 'BEGIN {srand()} {if (rand() <= 0.01) print $0}' yourfile.tsv > sample.tsv
+
+
+per windows
+Get-Content .\anonymous_reads.fq -TotalCount 10000 | Set-Content .\campione.fq
