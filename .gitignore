@@ -1,0 +1,44 @@
+# VSCode settings
+.vscode/
+
+# ----------------------------
+# LaTeX
+# ----------------------------
+
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+*.dvi
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+*.fdb_latexmk
+*.synctex.gz
+*.xdv
+
+# Temporary files
+*~
+*.bak
+*.backup
+*.tmp
+
+# ----------------------------
+# OS-specific
+# ----------------------------
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
