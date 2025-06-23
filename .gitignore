@@ -4,6 +4,18 @@
 
 code/config.py
 
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.pyo
+*.pyd
+*.pyc
+*.log
+
 # VSCode settings
 .vscode/
 
