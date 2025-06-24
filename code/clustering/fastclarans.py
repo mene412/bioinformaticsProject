@@ -1,94 +1,89 @@
 import numpy as np
+import random
+from clustering.fastPAM import fastpam_lab_build
 
-def run_fastclarans(distance_matrix, k, numlocal=3, maxneighbor=0.05):
+def run_fastCLARANS(distance_matrix, k, numlocal=5, maxneighbor=10, max_iter=100):
     """
-    FastCLARANS clustering algorithm implementation.
-    
+    CLARANS (Clustering Large Applications based on RANdomized Search)
+
     Parameters:
-    - distance_matrix: nxn symmetric matrix of pairwise distances
-    - k: number of clusters (medoids)
-    - numlocal: number of local searches to perform
-    - maxneighbor: fraction determining maximum neighbors to examine
-    
+        distance_matrix (np.ndarray): Full distance matrix (NxN)
+        k (int): Number of clusters
+        numlocal (int): Number of local minima to search
+        maxneighbor (int): Maximum number of neighbors to explore per local search
+        max_iter (int): Max iterations per local search
+
     Returns:
-    - best_labels: cluster assignment for each point
-    - best_medoids: indices of the best medoids found
-    - best_cost: total cost of the best clustering
+        best_labels (np.ndarray): Cluster assignments
+        best_medoids (List[int]): Indices of best medoids
+        best_cost (float): Total cost (sum of distances to medoids)
     """
-    # Get number of data points
     n = distance_matrix.shape[0]
-    
-    # Validate inputs
-    if k >= n:
-        raise ValueError(f"k ({k}) must be less than number of points ({n})")
-    if k <= 0:
-        raise ValueError(f"k must be positive, got {k}")
-    if not isinstance(distance_matrix, np.ndarray):
-        distance_matrix = np.array(distance_matrix)
-    if distance_matrix.shape[0] != distance_matrix.shape[1]:
-        raise ValueError("Distance matrix must be square")
-    
-    # Calculate maximum number of neighbors to examine in local search
-    num_neighbors = int(maxneighbor * k * (n - k))
-    if num_neighbors == 0:
-        num_neighbors = 1  # Ensure at least one neighbor is examined
-    
-    best_labels = None
-    best_cost = float("inf")
+    all_indices = list(range(n))
     best_medoids = None
+    best_cost = float('inf')
+    best_labels = None
 
-    # Perform numlocal independent runs
-    for run in range(numlocal):
-        print(f"Run {run + 1}/{numlocal}: distance matrix shape = {distance_matrix.shape}")
-        
-        # Initialize: randomly select k medoids
-        medoids = np.random.choice(n, k, replace=False).tolist()
-        
-        # Assign each point to nearest medoid
-        labels = np.argmin(distance_matrix[:, medoids], axis=1)
-        
-        # Calculate initial cost (sum of distances from points to their medoids)
-        current_cost = sum(distance_matrix[i, medoids[labels[i]]] for i in range(n))
+    for local_iter in range(numlocal):
+        print(f"CLARANS local search {local_iter+1}/{numlocal}...")
 
-        neighbors_examined = 0
-        
-        # Local search: try to improve by swapping medoids
-        while neighbors_examined < num_neighbors:
-            # Randomly select a current medoid to potentially replace
-            medoid_idx = np.random.choice(len(medoids))  # Index in medoids list
-            m = medoids[medoid_idx]  # Actual medoid point index
-            
-            # Get all non-medoid points
-            non_medoids = [i for i in range(n) if i not in medoids]
-            
-            # Randomly select a non-medoid as potential replacement
-            n_idx = np.random.choice(non_medoids)
-            
-            # Create new medoids list with the swap
-            new_medoids = medoids.copy()
-            new_medoids[medoid_idx] = n_idx
-            
-            # Reassign all points to nearest medoid in new configuration
-            new_labels = np.argmin(distance_matrix[:, new_medoids], axis=1)
-            
-            # Calculate new cost
-            new_cost = sum(distance_matrix[i, new_medoids[new_labels[i]]] for i in range(n))
+        # --- Step 2: Initialize current medoids using FastPAM BUILD ---
+        current_medoids = fastpam_lab_build(distance_matrix, k)
+        current_medoids_set = set(current_medoids)
 
-            # If improvement found, accept the change and reset neighbor counter
-            if new_cost < current_cost:
-                medoids = new_medoids
-                labels = new_labels
-                current_cost = new_cost
-                neighbors_examined = 0  # Reset counter when improvement found
-                print(f"  Improvement found: cost {new_cost:.4f}")
+        # --- Initial Assignment ---
+        Dp = np.full(n, np.inf)
+        Ep = np.full(n, np.inf)
+        nearest = np.full(n, -1, dtype=int)
+
+        for i in range(n):
+            dists = [(distance_matrix[i][m], m) for m in current_medoids]
+            dists.sort()
+            Dp[i], nearest[i] = dists[0]
+            Ep[i] = dists[1][0] if len(dists) > 1 else dists[0][0]
+        TD = np.sum(Dp)
+
+        j = 0
+        while j < maxneighbor:
+            xj = random.choice(list(set(all_indices) - current_medoids_set))
+            delta_TD = {m: -Dp[m] for m in current_medoids}
+
+            for xo in range(n):
+                if xo == xj:
+                    continue
+                doj = distance_matrix[xo][xj]
+                dn = Dp[xo]
+                ds = Ep[xo]
+                mn = nearest[xo]
+
+                if doj < dn:
+                    for m in current_medoids:
+                        if m != mn:
+                            delta_TD[m] += doj - dn
+                else:
+                    delta_TD[mn] += min(doj, ds) - dn
+
+            mi, min_delta = min(delta_TD.items(), key=lambda x: x[1])
+
+            if min_delta < 0:
+                # Accept neighbor
+                current_medoids.remove(mi)
+                current_medoids.append(xj)
+                current_medoids_set = set(current_medoids)
+
+                for i in range(n):
+                    dists = [(distance_matrix[i][m], m) for m in current_medoids]
+                    dists.sort()
+                    Dp[i], nearest[i] = dists[0]
+                    Ep[i] = dists[1][0] if len(dists) > 1 else dists[0][0]
+                TD += min_delta
+                j = 0
             else:
-                neighbors_examined += 1
+                j += 1
 
-        # Keep track of best solution across all runs
-        if current_cost < best_cost:
-            best_cost = current_cost
-            best_labels = labels.copy()
-            best_medoids = medoids.copy()
-            print(f"  New best solution: cost {best_cost:.4f}")
+        if TD < best_cost:
+            best_cost = TD
+            best_medoids = current_medoids.copy()
+            best_labels = np.argmin(distance_matrix[:, best_medoids], axis=1)
 
     return best_labels, best_medoids, best_cost
