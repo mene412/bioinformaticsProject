@@ -4,6 +4,12 @@
 
 code/config.py
 
+# ----------------------------
+# File di test
+# ----------------------------
+
+code/distanze_raw.csv
+
 __pycache__/
 *.py[cod]
 *.so

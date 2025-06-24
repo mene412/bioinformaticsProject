@@ -53,6 +53,42 @@ def read_fasta_samples(folder_path):
     print(f"Successfully read {len(samples)} files")
     return samples
 
+def read_fasta_samples_sampled_lollo(fasta_folder, sample_size_mb=10, avg_bytes_per_read=250):
+    samples = {}
+    reads_to_sample = int((sample_size_mb * 1024 * 1024) / avg_bytes_per_read)
+
+    for file in os.listdir(fasta_folder):
+        if file.endswith(".fq") or file.endswith(".fastq") or file.endswith(".fastq.gz") or file.endswith(".fasta") or file.endswith(".fa"):
+            sample_id = os.path.splitext(file)[0]
+            filepath = os.path.join(fasta_folder, file)
+            open_func = gzip.open if file.endswith(".gz") else open
+
+            # RESERVOIR SAMPLING: preleva reads_to_sample reads in modo casuale senza caricare tutto
+            reservoir = []
+            with open_func(filepath, "rt") as handle:
+                
+                for i, record in enumerate(SeqIO.parse(handle, "fastq")):
+                    try:
+                        if i < reads_to_sample:
+                            reservoir.append(str(record.seq))
+                            if i % 1000 == 0:
+                                print(f"Read {i}/{reads_to_sample} records from {file}...")
+                        else:
+                            j = random.randint(0, i)
+                            if j < reads_to_sample:
+                                reservoir[j] = str(record.seq)
+                            if i % 1000000 == 0:
+                                print(f"Read {i}/{reads_to_sample} records from {file}...")
+                    except Exception as e:
+                        print(f"Errore durante il parsing del record {i} in {file}: {e}")
+                        continue
+                samples[sample_id] = set(reservoir)
+                print(f"Sampled {len(reservoir)} reads from {file} (~{sample_size_mb} MB)")
+
+    return samples
+
+
+
 def read_fasta_samples_sampled(fasta_folder, sample_size_mb=10, avg_bytes_per_read=250):
     samples = {}
     reads_to_sample = int((sample_size_mb * 1024 * 1024) / avg_bytes_per_read)
@@ -60,6 +96,7 @@ def read_fasta_samples_sampled(fasta_folder, sample_size_mb=10, avg_bytes_per_re
     for subfolder in os.listdir(fasta_folder):
         subfolder_path = os.path.join(fasta_folder, subfolder)
         if not os.path.isdir(subfolder_path):
+            print(f"Skipping {subfolder_path}, not a directory")
             continue
 
         reads_path = os.path.join(subfolder_path, "reads", "anonymous_reads.fq.gz")
