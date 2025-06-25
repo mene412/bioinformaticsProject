@@ -1,0 +1,87 @@
+\section{El Clustering}
+Esistono:
+\begin{itemize}
+    \item Partitioning methods;
+    \item Hierarchical methods;
+    \item Density-based methods;
+    \item Gridbased methods.
+\end{itemize}\section{Hierarchical Clustering}
+\subsection{Agglomerative approach}
+\subsection{Divisive approach}
+\section{Types of distances}
+https://peerj.com/articles/cs-94/
+
+\section{Various algorithms with starting features and connection with final objective (Qua c'è sia partitioning che density-based, le grid-based non so cosa siano)}
+\subsection{PAM - requires all the distances before? not before, but requires ALL for sure}
+https://www.cs.umb.edu/cs738/pam1.pdf
+
+definizione di medoide
+
+trova soluzione locale tramite un successivo "gradient descent"
+
+posso farlo partire M volte così magari una di queste prendo la soluzione ottima e non la locale e basta
+
+2 fasi: Build e Swap
+
+la build da sola occupa $O(k\cdot n^2)$
+
+lo swap occupa $O(k(n-k)^2)$
+
+\subsubsection{Algorithm - mettiamo veramente sta parte?}
+\subsubsection{Improvements: FastPAM 1 and FastPAM2}
+insieme portano ad uno speedup di $O(k)$ perché nel momento in cui si scopre che il nuovo medoid è più vicino al medoid del punto, per ogni coppia (punto, medoid entrante, k-esimo medoid uscente) sarà utile fare lo swap e porterà con sé un diminuire della funzione obiettivo.
+
+Questo cambiamento viene fatto subito (da verificare se viene fatto anche le volte dopo in cui vengono interpellati di nuovo gli stessi punti) e in tempo $O(1)$, al posto di farlo nell'inner loop con un tempo di $O(k)$
+
+Sta roba che ho scritto è proprio sbagliata
+
+Un ulteriore miglioramento all'algoritmo di SWAP risulta essere il compiere non solo lo scambio che porta al miglioramento della funzione obiettivo più ampio, ma tutti gli scambi (uno per ogni medoide) che abbassano il valore della funzione obiettivo.
+
+In questo modo si raggiunge un ulteriore speedup $O(k)$.
+
+Altra idea: ora la SWAP è veloce e la maggior parte del tempo è spesa nella fase di BUILD. Allora è possibile compiere una BUILD più approssimata, ma più veloce, per rientrare il prima possible nella SWAP che è stata ottimizzata, sperando che sia possibile rientrare in un path del grafo che porta ad un minimo locale buono. Per fare questo si è disposti ad utilizzare un numero maggiore di iterazioni di SWAP.
+
+Questa BUILD si chiamerà Linear Approximative BUILD
+\subsection{CLARA - Randomized search}
+https://cs.ecu.edu/dingq/CSCI6905/readings/CLARANS.pdf
+$O(n^2)$ è troppo
+
+faccio sampling dei dati del dataset --> ne prendo $40 + 2k$ (capire quale paper lo dice)
+
+trovo k medoids
+
+calcolo la somma delle distanze di ciascun punto dal medoid più vicino
+
+itero $M$ volte, 5 volte di solito (dalla seconda volta, riuso i $k$ usati prima e ne aggiungo solo $40 + k$)
+
+alla fine vedo qual è stata la run migliore
+
+ora il runtime è $O(k^3)$
+\subsection{CLARANS - non devo avere tutte le distanze - Randomized search}
+creo un grafo dove ogni nodo è un set di k medoids (un clustering quindi)
+
+i vicini di un nodo sono quei set di k medoid che differiscono per un solo elemento dal nodo iniziale, tali vicini (neighbours) sono nell'ordine di $O(k \cdot (n-k))$
+
+posso calcolare la objective function per ciascuno dei miei vicini in $O(n)$ time
+
+non lo farò per tutti i miei vicini ma per un sottoinsieme (piccolo) di loro: al massimo il  1,5 percento, scelto a random. di solito si usa il 1,25 percento
+
+Se trovo che un mio vicino abbassa l'objective function, tale vicino diventa il nuovo current
+
+altrimenti, dopo che ne provo $maxNeighbours$ e nessuno di essi abbassa l'objective function, termino questa iterazione dell'algoritmo.
+
+posso compiere più iterazioni dell'algoritmo (un numero pari a $numLocal$) per partire da più punti dello spazio delle soluzioni e compiere gradient descent che portano a soluzioni locali diverse
+
+mi devo ricordare tutte le soluzioni che trovo (spazio pari a $O(numLocal \cdot k)$) per poi scegliere la migliore di esse.
+
+anche se skippo così tanti vicini, mi posso "ricollegare" al filone giusto anche dopo rientrando in questi path del grafo perché esso è ridondante.
+\subsection{Simka}
+\subsection{DBSCAN}
+\section{Our approach}
+Avremo un algoritmo fatto da noi o facciamo una revisione della letteratura e stop?
+\section{Test on datasets}
+Vogliamo tenere i risultati dei vari paper che abbiamo letto e magari fare analisi con la nostra proposta o ricalcoliamo un po' tutti questi approcci?
+\subsection{Time complexities}
+\subsection{Efficiency? quanto precisi sono i risultati}
+mi veniva in mente riguardo al paper su Simka che fa un check tra loro e metodi tassonomici e metodi basati sulle reads (qualsiasi cosa siano) e non sui kmers
+\subsection{Space - Disk and RAM}
