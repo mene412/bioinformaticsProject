@@ -1,0 +1,75 @@
+GOS72 : Indian Ocean
+GOS41 : Tropical South Pacific
+GOS18 : Caribbean Sea
+GOS35 : Galapagos Islands
+GOS48 : Polynesia Archipelagos
+GOS02 : North American East Coast
+GOS16 : Caribbean Sea
+GOS55 : Indian Ocean
+GOS53 : Indian Ocean
+GOS62 : Indian Ocean
+GOS63 : Indian Ocean
+GOS64 : Indian Ocean
+GOS61 : Indian Ocean
+GOS75 : Indian Ocean
+GOS13 : North American East Coast
+GOS00 : Sargasso Sea
+GOS50 : Polynesia Archipelagos
+GOS51 : North American East Coast
+GOS44 : Tropical South Pacific
+GOS12 : North American East Coast
+GOS36 : Eastern Tropical Pacific
+GOS21 : Eastern Tropical Pacific
+GOS29 : Galapagos Islands
+GOS17 : Caribbean Sea
+GOS33 : Galapagos Islands
+GOS06 : North American East Coast
+GOS70 : Indian Ocean
+GOS28 : Galapagos Islands
+GOS24 : Eastern Tropical Pacific
+GOS59 : Indian Ocean
+GOS67 : Indian Ocean
+GOS09 : North American East Coast
+GOS22 : Eastern Tropical Pacific
+GOS14 : North American East Coast
+GOS49 : Polynesia Archipelagos
+GOS46 : Tropical South Pacific
+GOS32 : Galapagos Islands
+GOS38 : Tropical South Pacific
+GOS34 : Galapagos Islands
+GOS07 : North American East Coast
+GOS45 : Tropical South Pacific
+GOS15 : Caribbean Sea
+GOS23 : Eastern Tropical Pacific
+GOS03 : North American East Coast
+GOS10 : North American East Coast
+GOS42 : Tropical South Pacific
+GOS31 : Galapagos Islands
+GOS71 : Indian Ocean
+GOS26 : Galapagos Islands
+GOS27 : Galapagos Islands
+GOS73 : Indian Ocean
+GOS11 : North American East Coast
+GOS52 : Polynesia Archipelagos
+GOS43 : Tropical South Pacific
+GOS74 : Indian Ocean
+GOS30 : Galapagos Islands
+GOS60 : Indian Ocean
+GOS01 : Sargasso Sea
+GOS37 : Tropical South Pacific
+GOS25 : Galapagos Islands
+GOS04 : North American East Coast
+GOS08 : North American East Coast
+GOS66 : Indian Ocean
+GOS54 : Indian Ocean
+GOS57 : Indian Ocean
+GOS47 : Polynesia Archipelagos
+GOS39 : Tropical South Pacific
+GOS56 : Indian Ocean
+GOS68 : Indian Ocean
+GOS20 : Panama Canal
+GOS69 : Indian Ocean
+GOS65 : Indian Ocean
+GOS40 : Tropical South Pacific
+GOS05 : North American East Coast
+GOS19 : Caribbean Sea
