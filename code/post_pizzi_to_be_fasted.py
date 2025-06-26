@@ -2,38 +2,44 @@ from Bio import SeqIO
 from collections import Counter
 import numpy as np
 import random
+import os
+import time
 
 def get_kmers(seq, k):
     return [seq[i:i+k] for i in range(len(seq) - k + 1)]
 
-def prepare_all_samples(fasta_file, k):
+def prepare_all_samples(folder_path, k):
     """
-    Reads sequences from a FASTA file and returns a list of sample dictionaries.
-
-    Each dictionary contains:
-        - 'kmers': a set of k-mers
-        - 'label': index of the nearest medoid (initially 0)
-        - 'second_label': index of the second nearest medoid (initially 0)
+    Reads one sample from each FASTA file in a folder.
+    Each sample is the combined set of all k-mers from all sequences in that file.
 
     Parameters:
-        fasta_file (str): Path to the FASTA file
+        folder_path (str): Path to a folder containing FASTA files
         k (int): k-mer size
 
     Returns:
-        List[Dict]: List of sample dictionaries
+        List[Dict]: List of samples, one per file
     """
     samples = []
-    for record in SeqIO.parse(fasta_file, "fasta"):
-        kmers = get_kmers(str(record.seq), k)
-        samples.append({
-            'kmers': set(kmers),
-            'label': 0,
-            'second_label': 0
-        })
+    for filename in os.listdir(folder_path):
+        if filename.endswith('.fasta') or filename.endswith('.fa'):
+            full_path = os.path.join(folder_path, filename)
+
+            all_kmers = []
+            for record in SeqIO.parse(full_path, "fasta"):
+                all_kmers.extend(get_kmers(str(record.seq), k))
+
+            samples.append({
+                'kmers': set(all_kmers),
+                'label': 0,
+                'second_label': 0
+            })
+
     return samples
 
 
-def distance(a, b, metric='jaccard'):
+
+def distance(a, b, metric='braycurtis'):
     """
     Computes distance between two sets or lists of k-mers.
     """
@@ -54,29 +60,10 @@ def distance(a, b, metric='jaccard'):
     else:
         raise ValueError("Unsupported metric: choose 'jaccard' or 'braycurtis'")
 
-def assign(centers, samples, metric='jaccard'):
-    """
-    Assigns each sample to the nearest and second nearest medoids.
-
-    Parameters:
-        centers (List[int]): Indices of current medoid samples in `samples`
-        samples (List[Dict]): Samples with 'kmers', 'label', and 'second_label'
-        metric (str): Distance metric to use
-    """
-    for sample in samples:
-        dists = [
-            (distance(sample['kmers'], samples[center_idx]['kmers'], metric), i)
-            for i, center_idx in enumerate(centers)
-        ]
-        dists.sort()  # sort by distance
-
-        # Set label as nearest medoid's position in `centers`
-        sample['label'] = dists[0][1]  # index in centers list
-        sample['second_label'] = dists[1][1] if len(dists) > 1 else dists[0][1]
 
 
 
-def fastCLARANS(samples, k, numlocal, maxneighbor, metric='jaccard'):
+def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
     """
     CLARANS clustering algorithm with in-place label assignment and distance caching.
 
@@ -90,64 +77,159 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='jaccard'):
     Returns:
         List[int]: Indices of best medoids
     """
+
+    # mincost = infinity
     n = len(samples)
     mincost = float('inf')
     bestnode = None
 
     # Initialize distance matrix with -1
     distance_matrix = np.full((n, n), -1.0)
-
-    def get_cached_distance(i, j):
+    how_many_cells_used = 0
+    def get_cached_distance(i, j, metric):
+        nonlocal how_many_cells_used
         if distance_matrix[i][j] == -1:
             d = distance(samples[i]['kmers'], samples[j]['kmers'], metric)
             distance_matrix[i][j] = d
             distance_matrix[j][i] = d
+            how_many_cells_used = how_many_cells_used + 1
         return distance_matrix[i][j]
+    
+    def assign(centers, samples, metric='jaccard'):
+        """
+        Assigns each sample to the nearest and second nearest medoids.
 
+        Parameters:
+            centers (List[int]): Indices of current medoid samples in `samples`
+            samples (List[Dict]): Samples with 'kmers', 'label', and 'second_label'
+            metric (str): Distance metric to use
+        """
+        for sample in samples:
+            dists = [
+                (get_cached_distance(sample['kmers'], samples[center_idx]['kmers'], metric), i)
+                for i, center_idx in enumerate(centers)
+            ]
+            dists.sort()  # sort by distance --> k logk
+
+            # Set label as nearest medoid's position in `centers`
+            sample['label'] = dists[0][1]  # index in centers list
+            sample['second_label'] = dists[1][1] if len(dists) > 1 else dists[0][1]
+
+
+    # i = 1
     for _ in range(numlocal):
+        print("local n. ", numlocal)
+
+        # current = k centers at random from samples
         current = random.sample(range(n), k)
+
+        # give a center to each sample in samples
+        # calculate second medoid most near
         assign(current, samples, metric)
 
+        # step 3) j = 1
         j = 1
+
+        # step 4)
         while j <= maxneighbor:
+
+            # take one center at random and take another from samples
             Om = random.choice(current)
             Op = random.choice([idx for idx in range(n) if idx not in current])
 
+            # define:
+            # Oj = sample in samples
+            # Om = medoid to be changed
+            # Op = new medoid to be added
+            # Oj,2 = second medoid most near to Oj
+            # Cjmp = cost of changing Om to Op for sample Oj
+
             TCmp = 0.0
 
+            # calculate for each sample in samples:
             for idx_Oj, Oj in enumerate(samples):
                 label_idx = current[Oj['label']]
                 second_label_idx = current[Oj['second_label']]
 
-                d_Oj_Om = get_cached_distance(idx_Oj, Om)
-                d_Oj_Op = get_cached_distance(idx_Oj, Op)
-                d_Oj_second = get_cached_distance(idx_Oj, second_label_idx)
+                d_Oj_Om = get_cached_distance(idx_Oj, Om, metric)
+                d_Oj_Op = get_cached_distance(idx_Oj, Op, metric)
+                d_Oj_second = get_cached_distance(idx_Oj, second_label_idx, metric)
 
+                # case 1: Oj belongs to cluster of Om, Oj more similar to Oj,2 than Op
                 if label_idx == Om and d_Oj_second < d_Oj_Op:
                     Cjmp = d_Oj_second - d_Oj_Om
+
+                # case 2: Oj belongs to cluster of Om, Oj more similar to Op than Oj,2
                 elif label_idx == Om and d_Oj_Op < d_Oj_second:
                     Cjmp = d_Oj_Op - d_Oj_Om
+
+                # case 3: Oj does not belong to cluster of Om, Oj more similar to Oj,2 than Op
                 elif label_idx != Om and d_Oj_second < d_Oj_Op:
                     Cjmp = 0.0
+
+                # case 4: Oj does not belong to cluster of Om, Oj more similar to Op than Oj,2
                 else:
                     Cjmp = d_Oj_Op - d_Oj_second
 
+                # TCmp = sum(Cjmp for each sample Oj in samples)
                 TCmp += Cjmp
 
+            # step 5)
             if TCmp < 0:
+                # change Om to Op
                 current.remove(Om)
                 current.append(Op)
+
+                # go to step 3)
                 assign(current, samples, metric)
                 j = 1
             else:
+                # j = j + 1
                 j += 1
 
+        # if cost(current) < mincost:
         current_cost = sum(
             get_cached_distance(idx, current[sample['label']])
             for idx, sample in enumerate(samples)
         )
-        if current_cost < mincost:
-            mincost = current_cost
-            bestnode = current.copy()
 
+        if current_cost < mincost:
+            # mincost = cost(current)
+            mincost = current_cost
+            # bestnode = current
+            bestnode = current.copy()
+            print("found best node")
+
+    # step 8)
+    # i = i+1
+    # if i > numlocal:
+    #   return bestnode
+    # else:
+    #   go to step 2
+
+
+    print(f"Number of distances calculated: {how_many_cells_used}")  # 3. Print the counter
     return bestnode
+
+
+def main():
+    folder_path = "C:\\Users\\Lorenzo Berlese\\Desktop\\metagenomics project\\alcuni_dataset_gos"  # Replace with actual path
+    k_mer_size = 6                        # Adjust k-mer size as needed
+    num_clusters = 3                      # Adjust number of medoids (k)
+    numlocal = 5                          # Number of local minima to search
+    maxneighbor = 10                      # Max neighbors per local search
+    metric = 'braycurtis'                 # Or 'jaccard'
+
+    print("Preparing samples...")
+    samples = prepare_all_samples(folder_path, k_mer_size)
+
+    print(f"Running fastCLARANS on {len(samples)} samples...")
+    start_time = time.time()
+    medoids = fastCLARANS(samples, num_clusters, numlocal, maxneighbor, metric)
+    end_time = time.time()
+
+    print(f"\nBest medoids (sample indices): {medoids}")
+    print(f"Runtime: {end_time - start_time:.2f} seconds")
+
+if __name__ == "__main__":
+    main()
