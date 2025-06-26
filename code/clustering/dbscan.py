@@ -74,7 +74,7 @@ def next_id(value):
 
 def region_query(distance_matrix, set_of_points, point, eps):
     """
-    Returns the indices and cl_id of all points q such that the distance between `point` and `q`
+    Returns the indices and cl_id of all points q such that the distance between `point` and q
     is less than or equal to `eps`.
 
     Parameters

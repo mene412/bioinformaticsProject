@@ -1,5 +1,5 @@
 import numpy as np
-from clustering.fastPAM import run_fast_pam
+from clustering.fastpam import run_fast_pam 
 
 def run_fastCLARA(distance_matrix, k, max_iter=5, sample_size=None):
     """
