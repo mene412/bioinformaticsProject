@@ -65,6 +65,9 @@ def prepare_all_samples(folder_path, k):
             for record in SeqIO.parse(full_path, "fasta"):
                 all_kmers.extend(get_kmers(str(record.seq), k))
 
+            print(f"Processing file: {filename}, found {len(all_kmers)} k-mers")
+            
+
             ambiental_label = ""
             with open(full_path, 'r') as f:
                 for line in f:
@@ -81,7 +84,7 @@ def prepare_all_samples(folder_path, k):
                 'kmers': set(all_kmers),
                 'label': -1,
                 'second_label': -1,
-                'ambiental_label': filename
+                'ambiental_label': ambiental_label
             })
 
     return samples
@@ -93,18 +96,25 @@ def distance(a, b, metric='braycurtis'):
     Computes distance between two sets or lists of k-mers.
     """
     if metric == 'jaccard':
-        a_set, b_set = set(a), set(b)
-        intersection = len(a_set & b_set)
-        union = len(a_set | b_set)
+        intersection = len(a & b)
+        union = len(a | b)
         return 1.0 - (intersection / union) if union > 0 else 1.0
 
     elif metric == 'braycurtis':
         a_counts = Counter(a)
         b_counts = Counter(b)
+
+        intersection = set(a_counts.keys()).intersection(b_counts.keys())
+        numerator = np.sum(min(a_counts[k], b_counts[k]) for k in intersection)
         all_keys = set(a_counts.keys()).union(b_counts.keys())
         a_vec = np.array([a_counts[k] for k in all_keys])
+        a_sum = np.sum(a_vec)
         b_vec = np.array([b_counts[k] for k in all_keys])
-        return np.sum(np.abs(a_vec - b_vec)) / np.sum(a_vec + b_vec)
+        b_sum = np.sum(b_vec)
+        if a_sum == 0 and b_sum == 0:
+            print("Warning: Both sets are empty, returning distance 1.0")
+        denominator = a_sum + b_sum
+        return 1 - (numerator/denominator) if denominator > 0 else 1.0
 
     else:
         raise ValueError("Unsupported metric: choose 'jaccard' or 'braycurtis'")
@@ -238,7 +248,7 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
 
         # if cost(current) < mincost:
         current_cost = sum(
-            get_cached_distance(idx, current[sample['label']])
+            get_cached_distance(idx, current[sample['label']], metric)
             for idx, sample in enumerate(samples)
         )
 
@@ -264,8 +274,8 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
 def main():
     folder_path = "C:\\Users\\Lorenzo Berlese\\Desktop\\metagenomics project\\alcuni_dataset_gos"  # Replace with actual path
     k_mer_size = 6                        # Adjust k-mer size as needed
-    num_clusters = 3                      # Adjust number of medoids (k)
-    numlocal = 5                          # Number of local minima to search
+    num_clusters = 2                      # Adjust number of medoids (k)
+    numlocal = 3                          # Number of local minima to search
     maxneighbor = 10                      # Max neighbors per local search
     metric = 'braycurtis'                 # Or 'jaccard'
 
