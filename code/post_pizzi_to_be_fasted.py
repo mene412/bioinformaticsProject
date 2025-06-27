@@ -68,23 +68,22 @@ def prepare_all_samples(folder_path, k):
             print(f"Processing file: {filename}, found {len(all_kmers)} k-mers")
             
 
+            id = os.path.splitext(filename)[0]
+
             ambiental_label = ""
-            with open(full_path, 'r') as f:
+            with open(os.path.join(folder_path, 'code/utils/retrieve_labels/true_labels.txt'), 'r') as f:
                 for line in f:
-                    if line.startswith('>'):
-                        if '/region_1="' in line:
-                            start = line.find('/region_1="') + len('/region_1="')
-                            end = line.find('"', start)
-                            ambiental_label = line[start:end]
-                            break
-                    
+                    parts = line.strip().split()
+                    label_id = parts[0]
+                    if (label_id == id):
+                        ambiental_label = " ".join(parts[1:]) 
 
             samples.append({
-                'id': os.path.splitext(filename)[0],  # Use filename without extension as ID
+                'id': id,  # Use filename without extension as ID
                 'kmers': set(all_kmers),
                 'label': -1,
                 'second_label': -1,
-                'ambiental_label': ambiental_label
+                'ambiental_label': filename
             })
 
     return samples
