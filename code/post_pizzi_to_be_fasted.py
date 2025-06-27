@@ -8,6 +8,42 @@ import time
 def get_kmers(seq, k):
     return [seq[i:i+k] for i in range(len(seq) - k + 1)]
 
+'''
+def find_ambiental_label(filename):
+    """
+    Parses the first header line of a FASTA file and extracts the value of the /region_1 field.
+
+    Parameters:
+        filename (str): Path to the FASTA file
+
+    Returns:
+        str or None: Value of /region_1 if found, else None
+    """
+    with open(filename, 'r') as f:
+        for line in f:
+            if line.startswith('>'):
+                if '/region_1="' in line:
+                    start = line.find('/region_1="') + len('/region_1="')
+                    end = line.find('"', start)
+                    return line[start:end]
+                else:
+                    return None  # /region_1 not found
+    return None  # No header found
+
+def find_id(filename):
+    """
+    Extracts the ID from the filename by removing the file extension and any leading directory path.
+
+    Parameters:
+        filename (str): Path to the FASTA file
+
+    Returns:
+        str: The ID extracted from the filename
+    """
+    base_name = os.path.basename(filename)
+    return os.path.splitext(base_name)[0]  # Remove extension
+'''
+
 def prepare_all_samples(folder_path, k):
     """
     Reads one sample from each FASTA file in a folder.
@@ -29,10 +65,23 @@ def prepare_all_samples(folder_path, k):
             for record in SeqIO.parse(full_path, "fasta"):
                 all_kmers.extend(get_kmers(str(record.seq), k))
 
+            ambiental_label = ""
+            with open(full_path, 'r') as f:
+                for line in f:
+                    if line.startswith('>'):
+                        if '/region_1="' in line:
+                            start = line.find('/region_1="') + len('/region_1="')
+                            end = line.find('"', start)
+                            ambiental_label = line[start:end]
+                            break
+                    
+
             samples.append({
+                'id': os.path.splitext(filename)[0],  # Use filename without extension as ID
                 'kmers': set(all_kmers),
-                'label': 0,
-                'second_label': 0
+                'label': -1,
+                'second_label': -1,
+                'ambiental_label': filename
             })
 
     return samples
@@ -104,16 +153,16 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
             samples (List[Dict]): Samples with 'kmers', 'label', and 'second_label'
             metric (str): Distance metric to use
         """
-        for sample in samples:
+        for sample in range(len(samples)):
             dists = [
-                (get_cached_distance(sample['kmers'], samples[center_idx]['kmers'], metric), i)
+                (get_cached_distance(sample, center_idx, metric), i)
                 for i, center_idx in enumerate(centers)
             ]
             dists.sort()  # sort by distance --> k logk
 
             # Set label as nearest medoid's position in `centers`
-            sample['label'] = dists[0][1]  # index in centers list
-            sample['second_label'] = dists[1][1] if len(dists) > 1 else dists[0][1]
+            samples[sample['label']] = dists[0][1]  # index in centers list
+            samples[sample['second_label']] = dists[1][1] if len(dists) > 1 else dists[0][1]
 
 
     # i = 1
