@@ -44,7 +44,7 @@ def find_majority_label(clustered_samples):
 
 def compute_evaluation_metrics(clustered_samples):
     """
-    Computes per-label (ambiental_label) precision, recall, and F1 score,
+    Computes per-label (ambiental_label) precision, recall,
     as well as macro and micro averages.
 
     Returns:
