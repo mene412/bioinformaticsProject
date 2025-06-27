@@ -161,8 +161,8 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
             dists.sort()  # sort by distance --> k logk
 
             # Set label as nearest medoid's position in `centers`
-            samples[sample['label']] = dists[0][1]  # index in centers list
-            samples[sample['second_label']] = dists[1][1] if len(dists) > 1 else dists[0][1]
+            samples[sample]['label'] = dists[0][1]  # index in centers list
+            samples[sample]['second_label'] = dists[1][1] if len(dists) > 1 else dists[0][1]
 
 
     # i = 1
