@@ -1,5 +1,5 @@
-\section{Introduction}
-\subsection{Data mining techniques}
+\section{Methods}
+\subsection{Clustering algorithms}
 \subsubsection{PAM}
 The PAM algorithm is very similar to \(k\)-means, mostly because both are partitional algorithms, in other words, both break the dataset into groups (clusters), and both work by trying to minimize the error, but PAM works with Medoids, that are an entity of the dataset that represent the group in which it is inserted, and \(k\)-means works with Centroids, that are artificially created entity that represent its cluster.
 
@@ -50,4 +50,56 @@ Input:\\
 \end{itemize}
 \subsubsection{CLARA}
 \subsubsection{CLARANS}
-\subsubsection{DBSCAN}
+\subsection{Distances}
+\subsubsection{Bray-Curtis}
+\subsection{Evaluation metrics}
+In our case we are dealing with a multi-class classification task, we evaluation we can use macro- or micro-average precision and recall. Macro-averaging gives equal weight to each class, while micro-averaging gives equal weight to each instance.
+
+Accuracy $ACC$ measures the proportion of correctly classified cases from the total number of objects in the dataset.
+\begin{equation}
+    ACC = \frac{\text{correct prediction}}{\text{all predictions}}
+\end{equation}
+
+accuracy has its downsides. While it does provide an estimate of the overall model quality, it disregards class balance and the cost of different errors. 
+
+You can use them in multi-class classification problems as well, there are different approaches to how to do that, each with its pros and cons. 
+
+\begin{itemize}
+    \item Precision and recall by class
+    
+    Precision $P_A$ for a given class $A$ in multi-class classification is the fraction of instances correctly classified as belonging to a specific class out of all instances the model predicted to belong to that class. 
+
+    \begin{equation}
+        P_A = \frac{TP_A}{TP_A + FP_A}
+    \end{equation}
+
+    Recall $R_A$ for a given class $A$ in multi-class classification is the fraction of instances in a class that the model correctly classified out of all instances in that class. 
+
+    \begin{equation}
+        R_A = \frac{TP_A}{TP_A + FN_A}
+    \end{equation}
+
+    \item Averaging precision and recall
+    
+    \begin{itemize}
+        \item Macro-averaging
+        \begin{equation}
+            P_\text{macro-averaging} = \frac{P_A + P_B + \dots + P_N}{N}
+        \end{equation}
+        \begin{equation}
+            R_\text{macro-averaging} = \frac{R_A + R_B + \dots + R_N}{N}
+        \end{equation}
+        \item Micro-averaging
+        \begin{equation}
+            P_\text{micro-averaging} = \frac{TP_A + TP_B + \dots + TP_N}{TP_A + FP_A + TP_B + FP_B + \dots + TP_A + FP_N}
+        \end{equation}
+        \begin{equation}
+            R_\text{micro-averaging} = \frac{TP_A + TP_B + \dots + TP_N}{TP_A + FN_A + TP_B + FN_B + \dots + TP_A + FN_N}
+        \end{equation}
+    \end{itemize}
+    
+
+\end{itemize}
+
+In the first case, you can calculate the precision and recall for each class individually. This way, you get multiple metrics based on the number of classes you have in the dataset.\\
+In the second case, you can "average" precision and recall across all the classes to get a single number. You can use different methods to average the precision, such as macro- or micro-averaging.

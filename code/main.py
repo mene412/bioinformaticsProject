@@ -8,7 +8,7 @@ from clustering.fastclarans import run_fastclarans
 from clustering.distance_matrix import create_distance_matrix, compute_minhashes
 from utils.helpers import print_cluster_results
 from clustering.distance_matrix import minhash_distance_matrix,lsh_distance_matrix
-from clustering.fastPAM import run_fast_pam
+from clustering.fastpam import run_fast_pam
 from clustering.PAM import run_pam
 
 def main():

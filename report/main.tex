@@ -1,36 +1,60 @@
-\documentclass[12pt,a4paper,twoside]{article}
+\documentclass[11pt]{article}
 
-\usepackage[
-	a4paper,
-	top=2cm,bottom=2cm,
-	outer=2cm,inner=3cm,
-	includeheadfoot
-]{geometry}
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta}
-\usepackage{amsmath}
-\usepackage{float}
-\usepackage{amssymb}
+% Packages
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+\usepackage{authblk}
+\usepackage{natbib}
 \usepackage{hyperref}
+\usepackage{times}
+\usepackage{abstract}
+\usepackage{float}
 
-\title{Bioinformatics Project}
-\author{
-    Lorenzo Berlese\\
-    \texttt{lorenzo.berlese.1@studenti.unipd.it} \\
-    Università degli Studi di Padova
-    \and
-    Matteo Meneghin\\
-    \texttt{matteo.meneghin@studenti.unipd.it} \\
-    Università degli Studi di Padova
-}
-
+% Title and Authors
+\title{\textbf{Metagenomics Comparison}}
+\author[1]{Lorenzo Berlese}
+\author[1]{Matteo Meneghin}
+\affil[1]{Università degli Studi di Padova}
+\date{\today}
 
 \begin{document}
 
 \maketitle
-	% Eventuale descrizione
-		\tableofcontents
 
-		\include{Chapters/Introduction}
+\begin{abstract}
+This report presents ...
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/methods}
+\input{sections/ourwork}
+\input{sections/results}
+\input{sections/conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
 
 \end{document}
+
+
+
+% \begin{document}
+
+% \maketitle
+% 	% Eventuale descrizione
+% 		%\tableofcontents
+
+% 		\include{Chapters/Introduction}
+%         \include{Chapters/TheGreatRecap}
+
+%         % 1 Intro: descrizione del progetto, perchè serve
+%         % 2 Methods: distances, clustering algo (PAM, ...), hierichical clustering, simka, python/R, phylib, dataset
+%         % 3 Our work: pipeline, our code
+%         % 4 Results: table of phylip. pearson, spearman
+%         % 5 Conclusion
+        
+%         \section{DOMANDE MIE}
+%         quanto dobbiamo spiegare noi e quanto delegare alla lettura dei paper originari?
+
+% \end{document}
