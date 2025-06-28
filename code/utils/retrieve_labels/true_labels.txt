@@ -8,6 +8,7 @@ GOS16 : Caribbean Sea
 GOS55 : Indian Ocean
 GOS53 : Indian Ocean
 GOS62 : Indian Ocean
+GOS76 : Coccos Keeling , Inside Lagoon
 GOS63 : Indian Ocean
 GOS64 : Indian Ocean
 GOS61 : Indian Ocean
@@ -15,14 +16,17 @@ GOS75 : Indian Ocean
 GOS13 : North American East Coast
 GOS00 : Sargasso Sea
 GOS50 : Polynesia Archipelagos
+GOS77 : Indian Ocean
 GOS51 : North American East Coast
 GOS44 : Tropical South Pacific
 GOS12 : North American East Coast
 GOS36 : Eastern Tropical Pacific
+GOS81 : Sargasso Sea
 GOS21 : Eastern Tropical Pacific
 GOS29 : Galapagos Islands
 GOS17 : Caribbean Sea
 GOS33 : Galapagos Islands
+GOS79 : Sargasso Sea
 GOS06 : North American East Coast
 GOS70 : Indian Ocean
 GOS28 : Galapagos Islands
@@ -46,9 +50,11 @@ GOS10 : North American East Coast
 GOS42 : Tropical South Pacific
 GOS31 : Galapagos Islands
 GOS71 : Indian Ocean
+GOS78 : Sargasso Sea
 GOS26 : Galapagos Islands
 GOS27 : Galapagos Islands
 GOS73 : Indian Ocean
+GOS80 : Sargasso Sea
 GOS11 : North American East Coast
 GOS52 : Polynesia Archipelagos
 GOS43 : Tropical South Pacific
@@ -60,6 +66,7 @@ GOS37 : Tropical South Pacific
 GOS25 : Galapagos Islands
 GOS04 : North American East Coast
 GOS08 : North American East Coast
+GOS82 : Sargasso Sea
 GOS66 : Indian Ocean
 GOS54 : Indian Ocean
 GOS57 : Indian Ocean

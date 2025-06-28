@@ -1,1 +1,25 @@
 \section{Introduction}
+\paragraph{What is metagenomics} Metagenomics is the application of modern genmic techniques to the study of communities of microbial organisms directly in their natural environment. This approach bypasses the need for isolating and cultivating individual species in the lab, which is particularly beneficial since many bacteria and viruses cannot survive in isolation.
+
+In principle is possible to access 100\% of the genetic resources of an environment.
+
+The applications are many:
+\begin{itemize}
+    \item Plant-microbe interaction for improving crop yield
+    \item Monitoring and optimizing wastewater treatment
+    \item Bioprospecting: hunting for novel enzymes and compounds
+    \item Function and ecology of the oceans
+    \item Development of functional feed
+    \item Monitoring pathogens
+    \item Monitoring polution
+    \item Disease surveillance and treatment
+\end{itemize}
+
+The metagenomics workflow (\cite{Metagenomics_guide}): experimental design, sampling, DNA extraction and amplification, DNA sequencing, assembling and binning, statistical analysis and data managment.
+
+%todo talk about them + workflow figure
+
+\paragraph{The problem} %and our project
+% The comparison of metagenomics samples finds applications in precision medicine and environmental control. 
+Given a set of metagenomics sample datasets, their all-against-all-comparison is a necessary step to derive a hierarchical clustering among the samples. However, it is also a very expensive step from the computational point of view. % add some numbers, like number of reads or time
+In this project we investigate CLARANS, a data mining technique, that avoid the computation of all-against-all-distances, and we test it on a metagenomics sample dataset.
