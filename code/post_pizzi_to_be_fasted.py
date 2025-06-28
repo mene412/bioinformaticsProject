@@ -91,7 +91,8 @@ def prepare_all_samples(folder_path, k):
                     parts = line.strip().split()
                     label_id = parts[0]
                     if (label_id == id):
-                        ambiental_label = " ".join(parts[1:])
+                        ambiental_label = " ".join(parts[1:]).lstrip(": ")
+                        print(f"Ambiental label for {id}--> {ambiental_label}")
             end_time = time.time()
             print(f"Ambiental label for {id}: {ambiental_label}, found in {end_time - start_time:.4f} seconds")
 
