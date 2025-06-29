@@ -9,63 +9,59 @@ from evaluation import compute_evaluation_metrics
 import json
 
 def get_kmers(seq, k):
+    """
+    Returns a list of k-mers.
+
+    Parameters
+    ----------
+        seq : str
+            The starting sequence
+        k : int
+            k-mer size
+    
+    Returns
+    -------
+        list
+            list of the k-mers in seq
+    """
     return [seq[i:i+k] for i in range(len(seq) - k + 1)]
 
-'''
-def find_ambiental_label(filename):
+def prepare_all_samples(samples_folder_path, k, true_labels_path):
     """
-    Parses the first header line of a FASTA file and extracts the value of the /region_1 field.
+    Reads all samples from the folder. Each FASTA file correspond to a sample.
+    Each sample is the combined set of all k-mers from all the sequences in the file.
 
-    Parameters:
-        filename (str): Path to the FASTA file
+    Parameters
+    ----------
+        folder_path : str 
+            Path to a folder containing FASTA files
+        k : int
+            k-mer size
 
-    Returns:
-        str or None: Value of /region_1 if found, else None
-    """
-    with open(filename, 'r') as f:
-        for line in f:
-            if line.startswith('>'):
-                if '/region_1="' in line:
-                    start = line.find('/region_1="') + len('/region_1="')
-                    end = line.find('"', start)
-                    return line[start:end]
-                else:
-                    return None  # /region_1 not found
-    return None  # No header found
+    Returns
+    ----------
+        List[Dict]
+        A list of sample dictionaries. Each dictionary represents a sample and has the following keys:
 
-def find_id(filename):
-    """
-    Extracts the ID from the filename by removing the file extension and any leading directory path.
-
-    Parameters:
-        filename (str): Path to the FASTA file
-
-    Returns:
-        str: The ID extracted from the filename
-    """
-    base_name = os.path.basename(filename)
-    return os.path.splitext(base_name)[0]  # Remove extension
-'''
-
-def prepare_all_samples(folder_path, k):
-    """
-    Reads one sample from each FASTA file in a folder.
-    Each sample is the combined set of all k-mers from all sequences in that file.
-
-    Parameters:
-        folder_path (str): Path to a folder containing FASTA files
-        k (int): k-mer size
-
-    Returns:
-        List[Dict]: List of samples, one per file
+        - 'id' : str  
+            Identifier for the sample, retrieved from the filename in the format 'GOSXX'.
+        - 'kmers' : set of str  
+            A set of all unique k-mers found in the sample.
+        - 'counts' : dict of {str: int}  
+            A dictionary mapping each k-mer to its count in the sample.
+        - 'label' : int  
+            Default label for the sample. Initialized to -1.
+        - 'second_label' : int  
+            Secondary label for the sample. Initialized to -1.
+        - 'ambiental_label' : str or int  
+            Additional label for environmental context, retrieved from `true_labels.txt`.
     """
     samples = []
-    for filename in os.listdir(folder_path):
+    for filename in os.listdir(samples_folder_path):
         if filename.endswith('.fasta') or filename.endswith('.fa'):
-            full_path = os.path.join(folder_path, filename)
+            full_path = os.path.join(samples_folder_path, filename)
 
-            all_kmers = []
-            
+            # unused, all_kmers = []
             kmer_counter = Counter()
 
             print(f"Processing file: {filename} of dimension {os.path.getsize(full_path) / 1024:.4f} KB")
@@ -84,9 +80,10 @@ def prepare_all_samples(folder_path, k):
             print(f"Found {len(kmer_counter)} k-mers. Done in {end_time - start_time:.4f} seconds")
             
             start_time = time.time()
-            id = os.path.splitext(filename)[0]
+            id = os.path.splitext(filename)[0] # Use filename without extension as ID
             ambiental_label = ""
-            with open(os.path.join(folder_path, '..\\bioinformaticsProject\\code\\true_labels.txt'), 'r') as f:
+            #todo check true_labels path
+            with open(os.path.join(true_labels_path), 'r') as f:
                 for line in f:
                     parts = line.strip().split()
                     label_id = parts[0]
@@ -99,9 +96,9 @@ def prepare_all_samples(folder_path, k):
             size_before = sys.getsizeof(kmer_counter.keys())
             start_time = time.time()
             samples.append({
-                'id': id,  # Use filename without extension as ID
-                'kmers': set(kmer_counter.keys()),  # or use the Counter directly if using Bray-Curtis
-                'counts': kmer_counter,             # optional: store separately for braycurtis
+                'id': id,
+                'kmers': set(kmer_counter.keys()),
+                'counts': kmer_counter,
                 'label': -1,
                 'second_label': -1,
                 'ambiental_label': ambiental_label
@@ -114,11 +111,35 @@ def prepare_all_samples(folder_path, k):
 
     return samples
 
-
-
 def distance(a, b, metric='braycurtis'):
     """
-    Computes distance between two sets or lists of k-mers.
+    Computes the distance between two sets or lists of k-mers.
+
+    Parameters
+    ----------
+    a : dict of {str: int}  
+        The first collection of k-mers. Can be a list (with possible duplicates) or a set (unique k-mers).
+    
+    b : dict of {str: int}  
+        The second collection of k-mers. Same format as `a`.
+    
+    metric : str, optional
+        The distance metric to use. Supported values are:
+        
+        - `'jaccard'` : computes the Jaccard distance between the two sets.
+        - `'braycurtis'` : computes the Bray-Curtis distance, which takes into account the counts of k-mers.
+        
+        Default is `'braycurtis'`.
+
+    Returns
+    -------
+    float
+        The computed distance value between the two k-mer collections.
+
+    Raises
+    ------
+    ValueError
+        If an unsupported metric is specified.
     """
     if metric == 'jaccard':
         intersection = len(a.keys() & b.keys())
@@ -142,8 +163,6 @@ def distance(a, b, metric='braycurtis'):
         raise ValueError("Unsupported metric: choose 'jaccard' or 'braycurtis'")
 
 
-
-
 def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
     """
     CLARANS clustering algorithm with in-place label assignment and distance caching.
@@ -159,7 +178,6 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
         List[int]: Indices of best medoids
     """
 
-    # mincost = infinity
     n = len(samples)
     mincost = float('inf')
     bestnode = None
@@ -167,6 +185,7 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
     # Initialize distance matrix with -1
     distance_matrix = np.full((n, n), -1.0)
     how_many_cells_used = 0
+
     def get_cached_distance(i, j, metric):
         nonlocal how_many_cells_used
         if distance_matrix[i][j] == -1:
@@ -288,35 +307,21 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
     # else:
     #   go to step 2
 
-
-    print(f"Number of distances calculated: {how_many_cells_used}")  # 3. Print the counter
+    print(f"Number of distances calculated: {how_many_cells_used}")
     return bestnode
 
 
 def main():
-    folder_path = "C:\\Users\\Lorenzo Berlese\\Desktop\\metagenomics project\\alcuni_dataset_gos"  # Replace with actual path
-    k_mer_size = 5                       # Adjust k-mer size as needed
-    num_clusters = 5                      # Adjust number of medoids (k)
-    numlocal = 5                          # Number of local minima to search
-    maxneighbor = 10                      # Max neighbors per local search
-    metric = 'braycurtis'                 # Or 'jaccard'
+    dataset_folder_path = ""               # Replace with actual path
+    true_labels_path = ""                  # Replace with actual path
+    k_mer_size = 21                        # Adjust k-mer size as needed
+    num_clusters = 10                      # Adjust number of medoids (k)
+    numlocal = 5                           # Number of local minima to search
+    maxneighbor = 10                       # Max neighbors per local search
+    metric = 'braycurtis'                  # Or 'jaccard'
 
     print("Preparing samples...")
-    samples = prepare_all_samples(folder_path, k_mer_size)
-
-    '''
-    for i, sample in enumerate(samples):
-        with open(f"samples{i}.txt", "w", encoding="utf-8") as f:
-            output_dict = {
-                'id': sample['id'],
-                'kmers': list(sample['kmers']),  # Convert set to list
-                'counts': dict(sample['counts']),  # Convert Counter to dict
-                'label': sample['label'],
-                'second_label': sample['second_label'],
-                'ambiental_label': sample['ambiental_label']
-            }
-            json.dump(output_dict, f, indent=2)
-    '''
+    samples = prepare_all_samples(dataset_folder_path, k_mer_size, true_labels_path)
 
     print(f"Running fastCLARANS on {len(samples)} samples...")
     start_time = time.time()
@@ -325,12 +330,16 @@ def main():
 
     with open("cluster.txt", "w", encoding="utf-8") as f:
         for sample in samples:
-            # Join only the values as strings, tab-separated
-            line = "\n".join(str(v) for v in sample.values())
+            # Extract only specific fields (excluding 'kmers' and 'counts')
+            values = [
+                sample["id"],
+                sample["label"],
+                sample["second_label"],
+                sample["ambiental_label"]
+            ]
+            line = "\n".join(str(v) for v in values)
             f.write(line + "\n\n")
     
-        
-
     compute_evaluation_metrics(samples)
 
     print(f"\nBest medoids (sample indices): {medoids}")
