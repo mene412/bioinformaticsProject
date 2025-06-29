@@ -5,7 +5,7 @@
 #SBATCH -t 04:00:00
 #SBATCH -n 1
 #SBATCH -p allgroups
-#SBATCH --mem 80G
+#SBATCH --mem 250G
 #SBATCH --mail-user matteo.meneghin@studenti.unipd.it
 #SBATCH --mail-type ALL
 
