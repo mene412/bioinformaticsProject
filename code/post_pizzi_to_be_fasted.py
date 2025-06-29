@@ -6,7 +6,6 @@ import os
 import time
 import sys
 from evaluation import compute_evaluation_metrics
-import json
 
 def get_kmers(seq, k):
     """
@@ -25,6 +24,8 @@ def get_kmers(seq, k):
             list of the k-mers in seq
     """
     return [seq[i:i+k] for i in range(len(seq) - k + 1)]
+
+skip_files = {'GOS45.fasta', 'GOS43.fasta', 'GOS41.fasta', 'GOS40.fasta', 'GOS37.fasta', 'GOS39.fasta', 'GOS42.fasta', 'GOS38.fasta', 'GOS44.fasta'}
 
 def prepare_all_samples(samples_folder_path, k, true_labels_path):
     """
@@ -59,9 +60,11 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
     samples = []
     for filename in os.listdir(samples_folder_path):
         if filename.endswith('.fasta') or filename.endswith('.fa'):
+            if filename in skip_files:
+                print(f"Skipping file {filename} (in skip list)")
+                continue
             full_path = os.path.join(samples_folder_path, filename)
 
-            # unused, all_kmers = []
             kmer_counter = Counter()
 
             print(f"Processing file: {filename} of dimension {os.path.getsize(full_path) / 1024:.4f} KB")
@@ -313,7 +316,7 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
 
 def main():
     dataset_folder_path = ""               # Replace with actual path
-    true_labels_path = ""                  # Replace with actual path
+    true_labels_path = "/nfsd/bcb/bcbg/meneghinma/input/true_labels.txt"                  # Replace with actual path
     k_mer_size = 21                        # Adjust k-mer size as needed
     num_clusters = 10                      # Adjust number of medoids (k)
     numlocal = 5                           # Number of local minima to search

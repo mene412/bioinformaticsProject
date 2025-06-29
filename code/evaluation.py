@@ -110,12 +110,12 @@ def compute_evaluation_metrics(clustered_samples):
     return label_metrics, macro_avg, micro_avg
 
 # testing
-samples = [
-    {'id': 'a', 'kmers': {'A'}, 'label': 0, 'second_label': -1, 'ambiental_label': 'indoor'},
-    {'id': 'b', 'kmers': {'B'}, 'label': 0, 'second_label': -1, 'ambiental_label': 'indoor'},
-    {'id': 'c', 'kmers': {'C'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'outdoor'},
-    {'id': 'd', 'kmers': {'D'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'outdoor'},
-    {'id': 'e', 'kmers': {'E'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'indoor'},
-]    
+# samples = [
+#     {'id': 'a', 'kmers': {'A'}, 'label': 0, 'second_label': -1, 'ambiental_label': 'indoor'},
+#     {'id': 'b', 'kmers': {'B'}, 'label': 0, 'second_label': -1, 'ambiental_label': 'indoor'},
+#     {'id': 'c', 'kmers': {'C'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'outdoor'},
+#     {'id': 'd', 'kmers': {'D'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'outdoor'},
+#     {'id': 'e', 'kmers': {'E'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'indoor'},
+# ]    
 
-compute_evaluation_metrics(samples)
+# compute_evaluation_metrics(samples)
