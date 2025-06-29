@@ -89,6 +89,8 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
             with open(os.path.join(true_labels_path), 'r') as f:
                 for line in f:
                     parts = line.strip().split()
+                    if not parts:  # <-- evita l'accesso a lista vuota
+                        continue
                     label_id = parts[0]
                     if (label_id == id):
                         ambiental_label = " ".join(parts[1:]).lstrip(": ")
