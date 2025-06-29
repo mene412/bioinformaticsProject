@@ -9,4 +9,6 @@
 #SBATCH --mail-user matteo.meneghin@studenti.unipd.it
 #SBATCH --mail-type ALL
 
-srun /bin/python3 /nfsd/bcb/bcbg/meneghinma/scripts/clarans.py 
+source /nfsd/bcb/bcbg/meneghinma/scripts/.venv/bin/activate
+
+srun python /nfsd/bcb/bcbg/meneghinma/scripts/clarans.py

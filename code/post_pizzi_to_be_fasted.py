@@ -315,8 +315,8 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
 
 
 def main():
-    dataset_folder_path = ""               # Replace with actual path
-    true_labels_path = "/nfsd/bcb/bcbg/meneghinma/input/true_labels.txt"                  # Replace with actual path
+    dataset_folder_path = "/nfsd/bcb/bcbg/berleselor/datasets"               # Replace with actual path
+    true_labels_path = "/nfsd/bcb/bcbg/meneghinma/input/true_labels.txt"     # Replace with actual path
     k_mer_size = 21                        # Adjust k-mer size as needed
     num_clusters = 10                      # Adjust number of medoids (k)
     numlocal = 5                           # Number of local minima to search
