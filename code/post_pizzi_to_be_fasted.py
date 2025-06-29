@@ -25,6 +25,8 @@ def get_kmers(seq, k):
     """
     return [seq[i:i+k] for i in range(len(seq) - k + 1)]
 
+# List of files without sequences but only metadata
+#todo try to re-download them with specific single wget after checking the link
 skip_files = {'GOS45.fasta', 'GOS43.fasta', 'GOS41.fasta', 'GOS40.fasta', 'GOS37.fasta', 'GOS39.fasta', 'GOS42.fasta', 'GOS38.fasta', 'GOS44.fasta'}
 
 def prepare_all_samples(samples_folder_path, k, true_labels_path):
@@ -38,6 +40,8 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
             Path to a folder containing FASTA files
         k : int
             k-mer size
+        true_labels_path : str
+            Path to the `.txt` file with labels in the format `GOSXX : label`, one entry for line
 
     Returns
     ----------
@@ -73,7 +77,6 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
             start_time = time.time()
             for record in SeqIO.parse(full_path, "fasta"):
                 num_reads += 1
-                # print(".", end="", flush=True)
                 if num_reads % 10000 == 0:
                     print(f"Processed {num_reads} reads so far...")
                 kmer_counter.update(get_kmers(str(record.seq), k))
@@ -89,7 +92,7 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
             with open(os.path.join(true_labels_path), 'r') as f:
                 for line in f:
                     parts = line.strip().split()
-                    if not parts:  # <-- evita l'accesso a lista vuota
+                    if not parts:
                         continue
                     label_id = parts[0]
                     if (label_id == id):
@@ -118,15 +121,15 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
 
 def distance(a, b, metric='braycurtis'):
     """
-    Computes the distance between two sets or lists of k-mers.
+    Computes the distance between two dicts of k-mers, in the format `{k-mer : counts}`.
 
     Parameters
     ----------
     a : dict of {str: int}  
-        The first collection of k-mers. Can be a list (with possible duplicates) or a set (unique k-mers).
+        The first collection of k-mers.
     
     b : dict of {str: int}  
-        The second collection of k-mers. Same format as `a`.
+        The second collection of k-mers.
     
     metric : str, optional
         The distance metric to use. Supported values are:
@@ -137,12 +140,12 @@ def distance(a, b, metric='braycurtis'):
         Default is `'braycurtis'`.
 
     Returns
-    -------
+    ----------
     float
         The computed distance value between the two k-mer collections.
 
     Raises
-    ------
+    ----------
     ValueError
         If an unsupported metric is specified.
     """
@@ -172,15 +175,35 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
     """
     CLARANS clustering algorithm with in-place label assignment and distance caching.
 
-    Parameters:
-        samples (List[Dict]): Each sample has 'kmers', 'label', 'second_label'
-        k (int): Number of clusters
-        numlocal (int): Number of local minima to search
-        maxneighbor (int): Maximum neighbors to explore per local search
-        metric (str): Distance metric: 'jaccard' or 'braycurtis'
+    Parameters
+    ----------
+        samples (List[Dict]) 
+            A list of sample dictionaries. Each dictionary represents a sample and has the following keys:
+            - 'id' : str  
+                Identifier for the sample, retrieved from the filename in the format 'GOSXX'.
+            - 'kmers' : set of str  
+                A set of all unique k-mers found in the sample.
+            - 'counts' : dict of {str: int}  
+                A dictionary mapping each k-mer to its count in the sample.
+            - 'label' : int  
+                Default label for the sample. Initialized to -1.
+            - 'second_label' : int  
+                Secondary label for the sample. Initialized to -1.
+            - 'ambiental_label' : str or int  
+                Additional label for environmental context, retrieved from `true_labels.txt`.
+        k (int)
+            Number of clusters
+        numlocal (int)
+            Number of local minima to search
+        maxneighbor (int)
+            Maximum neighbors to explore per local search
+        metric (str)
+            Distance metric: 'jaccard' or 'braycurtis'
 
-    Returns:
-        List[int]: Indices of best medoids
+    Returns
+    ----------
+        List[int]
+            Indices of best medoids
     """
 
     n = len(samples)
@@ -192,6 +215,27 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
     how_many_cells_used = 0
 
     def get_cached_distance(i, j, metric):
+        """
+        Retrieves the cached distance between two samples, or computes and caches it if not already computed.
+
+        This function checks if the distance between samples `i` and `j` has already been computed and stored 
+        in the `distance_matrix`. If not, it calculates the distance using the provided `metric`, stores it 
+        symmetrically in the matrix, and updates the counter `how_many_cells_used`.
+
+        Parameters
+        ----------
+        i : int
+            Index of the first sample in the `samples` list.
+        j : int
+            Index of the second sample in the `samples` list.
+        metric : str
+            The distance metric to use ('jaccard' or 'braycurtis').
+
+        Returns
+        -------
+        float
+            The distance between samples `i` and `j`.
+        """
         nonlocal how_many_cells_used
         if distance_matrix[i][j] == -1:
             d = distance(samples[i]['counts'], samples[j]['counts'], metric)
@@ -204,10 +248,14 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
         """
         Assigns each sample to the nearest and second nearest medoids.
 
-        Parameters:
-            centers (List[int]): Indices of current medoid samples in `samples`
-            samples (List[Dict]): Samples with 'kmers', 'label', and 'second_label'
-            metric (str): Distance metric to use
+        Parameters
+        ----------
+            centers (List[int])
+                Indices of current medoid samples in `samples`
+            samples (List[Dict])
+                Samples with 'kmers', 'label', and 'second_label'
+            metric (str)
+                Distance metric to use
         """
         for sample in range(len(samples)):
             dists = [
@@ -221,7 +269,6 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
             samples[sample]['second_label'] = dists[1][1] if len(dists) > 1 else dists[0][1]
 
 
-    # i = 1
     for _ in range(numlocal):
         print("local n. ", numlocal)
 
