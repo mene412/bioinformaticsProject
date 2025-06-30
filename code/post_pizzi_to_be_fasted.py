@@ -136,7 +136,7 @@ def distance(a, b, metric='braycurtis'):
         if a_sum == 0 and b_sum == 0:
             print("Warning: Both sets are empty, returning distance 1.0")
         denominator = a_sum + b_sum
-        return 1 - (numerator/denominator) if denominator > 0 else 1.0
+        return 1 - 2 * (numerator/denominator) if denominator > 0 else 1.0
 
     else:
         raise ValueError("Unsupported metric: choose 'jaccard' or 'braycurtis'")
@@ -295,8 +295,8 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
 
 def main():
     folder_path = "C:\\Users\\Lorenzo Berlese\\Desktop\\metagenomics project\\alcuni_dataset_gos"  # Replace with actual path
-    k_mer_size = 5                       # Adjust k-mer size as needed
-    num_clusters = 5                      # Adjust number of medoids (k)
+    k_mer_size = 3                       # Adjust k-mer size as needed
+    num_clusters = 12                      # Adjust number of medoids (k)
     numlocal = 5                          # Number of local minima to search
     maxneighbor = 10                      # Max neighbors per local search
     metric = 'braycurtis'                 # Or 'jaccard'
