@@ -80,17 +80,18 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
                 kmer_counter.update(valid_kmers(str(record.seq), k))
             end_time = time.time()
 
+
             base_name = os.path.splitext(filename)[0]  # "GOS01"
-            printfile = base_name + "_kmer_counts.txt"
+            printfile = base_name + "_done.txt"
             print(f"Found {len(kmer_counter)} k-mers. Done in {end_time - start_time:.4f} seconds")
             with open(printfile, "w", encoding="utf-8") as f:
-                for kmer, count in kmer_counter.items():
-                    f.write(f"{kmer}\t{count}\n")
+                    f.write("done\n")
+
             
             start_time = time.time()
             id = os.path.splitext(filename)[0] # Use filename without extension as ID
             ambiental_label = ""
-            #todo check true_labels path
+            
             with open(os.path.join(true_labels_path), 'r') as f:
                 for line in f:
                     parts = line.strip().split()
