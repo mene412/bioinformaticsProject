@@ -82,28 +82,32 @@ def compute_evaluation_metrics(clustered_samples):
 
         precision = TP / (TP + FP) if (TP + FP) > 0 else 0.0
         recall = TP / (TP + FN) if (TP + FN) > 0 else 0.0
-        counts.update({'precision': precision, 'recall': recall})
+        F1score = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+        counts.update({'precision': precision, 'recall': recall, 'F1score': F1score})
 
     # Macro averaging
     macro_avg = {
         'macro_precision': sum(m['precision'] for m in label_metrics.values()) / len(label_metrics),
         'macro_recall': sum(m['recall'] for m in label_metrics.values()) / len(label_metrics),
+        'macro_F1score': sum(m['F1score'] for m in label_metrics.values()) / len(label_metrics),
     }
 
     # Micro averaging
     micro_precision = total_TP / (total_TP + total_FP) if (total_TP + total_FP) > 0 else 0.0
     micro_recall = total_TP / (total_TP + total_FN) if (total_TP + total_FN) > 0 else 0.0
-
+    micro_F1score = (2 * micro_precision * micro_recall) / (micro_precision + micro_recall) if (micro_precision + micro_recall) > 0 else 0.0
+    
     micro_avg = {
         'micro_precision': micro_precision,
         'micro_recall': micro_recall,
+        'micro_F1score': micro_F1score,
     }
 
     # Print results
     print('- - - RESULTS - - -')
     for label, m in label_metrics.items():
         print(f"Label '{label}': TP={m['TP']}, FP={m['FP']}, FN={m['FN']}, "
-              f"Precision={m['precision']:.2f}, Recall={m['recall']:.2f}")
+              f"Precision={m['precision']:.2f}, Recall={m['recall']:.2f}, F1score={m['F1score']:.2f}")
     print("Macro-Averaged Metrics:", macro_avg)
     print("Micro-Averaged Metrics:", micro_avg)
 
