@@ -7,23 +7,21 @@ import time
 import sys
 from evaluation import compute_evaluation_metrics
 
-def get_kmers(seq, k):
-    """
-    Returns a list of k-mers.
 
-    Parameters
-    ----------
-        seq : str
-            The starting sequence
-        k : int
-            k-mer size
-    
-    Returns
-    -------
-        list
-            list of the k-mers in seq
+def valid_kmers(seq, k):
     """
-    return [seq[i:i+k] for i in range(len(seq) - k + 1)]
+    Yields valid k-mers containing only ACGT.
+    """
+    i = 0
+    while i <= len(seq) - k:
+        kmer = seq[i:i+k]
+        for j in range(k):
+            if kmer[j] not in 'ACGT':
+                i += j + 1  # Skip to character after invalid base
+                break
+        else:
+            yield kmer
+            i += 1
 
 # List of files without sequences but only metadata
 #todo try to re-download them with specific single wget after checking the link
@@ -79,11 +77,15 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
                 num_reads += 1
                 if num_reads % 10000 == 0:
                     print(f"Processed {num_reads} reads so far...")
-                kmer_counter.update(get_kmers(str(record.seq), k))
+                kmer_counter.update(valid_kmers(str(record.seq), k))
             end_time = time.time()
 
-
+            base_name = os.path.splitext(filename)[0]  # "GOS01"
+            printfile = base_name + "_kmer_counts.txt"
             print(f"Found {len(kmer_counter)} k-mers. Done in {end_time - start_time:.4f} seconds")
+            with open(printfile, "w", encoding="utf-8") as f:
+                for kmer, count in kmer_counter.items():
+                    f.write(f"{kmer}\t{count}\n")
             
             start_time = time.time()
             id = os.path.splitext(filename)[0] # Use filename without extension as ID
@@ -101,7 +103,10 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
             end_time = time.time()
             print(f"Ambiental label for {id}: {ambiental_label}, found in {end_time - start_time:.4f} seconds")
 
-            size_before = sys.getsizeof(kmer_counter.keys())
+            pre_size = sys.getsizeof(kmer_counter)
+            for key in kmer_counter:
+                pre_size += sys.getsizeof(key) + sys.getsizeof(kmer_counter[key])
+            # size_before = sys.getsizeof(kmer_counter.keys())
             start_time = time.time()
             samples.append({
                 'id': id,
@@ -114,7 +119,7 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
             end_time = time.time()
             print(f"Added sample {id} with {len(kmer_counter)} k-mers. Done in {end_time - start_time:.4f} seconds")
 
-            print(f"Size of added sample in KB: {(sys.getsizeof(kmer_counter.keys()) / 1024 - size_before / 1024):.5f}")
+            print(f"Size of added sample in KB: {(pre_size):.5f}")
             print()
 
     return samples
@@ -364,8 +369,12 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric='braycurtis'):
 
 
 def main():
+    # dataset_folder_path = "C:\\Users\\Lorenzo Berlese\\Desktop\\metagenomics project\\alcuni_dataset_gos"               # Replace with actual path
+    # true_labels_path = "C:\\Users\\Lorenzo Berlese\\Desktop\\metagenomics project\\true_labels.txt"     # Replace with actual path
+
     dataset_folder_path = "/nfsd/bcb/bcbg/berleselor/datasets"               # Replace with actual path
     true_labels_path = "/nfsd/bcb/bcbg/meneghinma/input/true_labels.txt"     # Replace with actual path
+
     k_mer_size = 21                        # Adjust k-mer size as needed
     num_clusters = 10                      # Adjust number of medoids (k)
     numlocal = 5                           # Number of local minima to search
