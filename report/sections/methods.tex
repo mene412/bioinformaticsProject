@@ -50,13 +50,58 @@ Input:\\
 \end{itemize}
 \subsubsection{CLARA} %? da togliere?
 \subsubsection{CLARANS}
-%todo lorenzo
+A way to reduce the number of distances calculated to create a clustering could be the use of the CLARANS algorithm, name that stands for Clustering Large Applications based on RANdomized search.
+
+The CLARANS algorithm is different from PAM and CLARA: it is not performed a check for every pair (medoid, non-medoid) to find a possible diminishing of the loss function (sum of square distances from the nearest medoid), instead it is thought an underlying graph abstraction of the problem, where each node is a collection of k points, representing the medoids and every arch is the swap of a medoid with a non-medoid.
+
+The CLARANS algorithm searches in this highly connected graph for some neighbours that bring a lowering of the loss function - and it does so until it finds a local minimum. For each step, the number of neighbours checked is not the entire set of nodes at distance 1 from the current one, instead there is a parameter, \italic{numneighbours}, that manages the level of time spent on a node.
+
+Moreover, after finding a certain amount - numlocal - of local minima, the one that leads to the lowest value of the loss function is returned
+
+We have to point out that, although this algorithm does not find exact local minima, but accepts of calling local minimum a node where the neighbours explored do not better the loss function, the results shown by THIS PAPER [
+%todo trova qualcosa sulla qualità]
+] show that CLARANS does not miss good solutions in terms of the PAM one, which instead searches for all the neighbours of a set of medoids.
+
+Adding to this, it is clear that being the graph higly connected, moving to the real local minimum does not suffer highly from "taking the wrong direction", because there are multiple routes that bring to the same optimal node.
+
+The pseudocode for CLARANS is the following:
+
+CO
+
+DE
+
+CO
+
+DE
+
+
 \cite{CLARANS}
 \subsection{Distances}
+Having the goal of clustering metagenomic datasets, it is necessary to find a way to measure some sort of distance between two sets of reads from possibly different species.
+
+A way could be to compare the reads (or contigs) to taxonomic profiles to find the sample composition in terms of species.
+
+Another way is instead the evaluation of two samples starting from the raw data, the reads, comparing the kmers in common and not in common.
+From a read of m bases, m-k+1 kmers of length k are exctracted and put in a set. This can be done for each read in a sample, resulting in a set for each sample.
+
+It is then possible to calculate on these sets some ecological distances, both abundance-based or presence-based. The former returns an higher grade of similarity if a kmer is present in the two samples for which the distance is calculated contain that kmer and they have lots of copies of it inside them.
+Presence-based distances instead focus just on the presence/absence of a kmer in both sets, without considering the absolute value of their presence.
+
+Presence-based methods are good if functional/taxonomical patterns are searched, for which even just the presence of a specific DNA sequence is enough to infer some conclusion.
+
+For this type of distance calculation, it is preferred to use abundanc-based distances, because kmers are too small to contain functional information, and at the same time abundance can give information about a higher "overlap rate".
+
+A tool that implements the kmer-count distance definition is Simka [CITARE EL PAPER todo]. From the paper of presentation of this method and realative overview of the Simka algorithm, the distances metrics used in this report have been extrapolated. They are presented in the next sections.
 \subsubsection{Bray-Curtis}
+It is defined as:
+\begin{equation}
+    BrayCurtis_{Ab}(S_i, S_j) = 1 - 2\frac{\sum_{w \in S_i\cap S_j}min(N_{S_i}(w), N_{S_j}(w))}{\sum_{w \in S_i}N_{S_i}(w) + \sum_{w \in S_j}N_{S_j}(w)}
+\end{equation}
+where $w$ is a k-mer and $N_{S_i}(w)$ is the abundance of $w$ in the dataset $S_i$.
+\subsubsection{Jaccard}
 
 \subsection{Evaluation metrics} %todo add citation
-In our case we are dealing with a multi-class classification task, we evaluation we can use macro- or micro-average precision and recall (\cite{MultiClass_Evaluation_Metrics}). Macro-averaging gives equal weight to each class, while micro-averaging gives equal weight to each instance.
+In our case we are dealing with a multi-class classification task, for evaluation we can use macro- or micro-average precision and recall (\cite{MultiClass_Evaluation_Metrics}). Macro-averaging gives equal weight to each class, while micro-averaging gives equal weight to each instance.
 
 Accuracy $ACC$ measures the proportion of correctly classified cases from the total number of objects in the dataset.
 \begin{equation}
@@ -106,6 +151,120 @@ You can use them in multi-class classification problems as well, there are diffe
 
 In the first case, you can calculate the precision and recall for each class individually. This way, you get multiple metrics based on the number of classes you have in the dataset.\\
 In the second case, you can "average" precision and recall across all the classes to get a single number. You can use different methods to average the precision, such as macro- or micro-averaging.
+
+Moreover it is possible to use F1 as a parameter that joins the information given by both precision and recall. The formula of F1 for any class A is:
+\begin{equation}
+            F1_A = 2 \cdot \frac{P_A \cdot R_A}{P_A + R_A}
+\end{equation}
+
+In the context of multiclass evaluation, you can either calculate the F1-score for each class, or instead averaging the different values obtained in an only parameter. As before this can be done with macro-averaging or micro-averaging.
+
+The formulas for the two types of averaging are:
+\begin{equation}
+            F1_\text{macro-averaging} = \frac{F1_A + F1_B + \cdots + F1_N}{N}
+\end{equation}
+
+\begin{equation}
+            F1_\text{micro-averaging} = 2 \cdot \frac{P_\text{micro-averaging} \cdot R_\text{micro-averaging}}{P_\text{micro-averaging} + R_\text{micro-averaging}}
+\end{equation}
+
 \subsection{Dataset}
-%todo lorenzo
+The dataset used for the report consists in one project of the GOS (Global Ocean Sampling) marine dataset, which contains reads sequenced with Sanger (prevalently) and pyrosequencing.
+
+The sample we have chosen are the following, listed with their geographical label, that is where the sample had been taken.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|c|l|c|}
+\hline
+\textbf{Sample ID} & \textbf{Geographical Label} & \textbf{Dimension (KB)} \\
+\hline
+GOS02 & North American East Coast & --- \\
+GOS03 & North American East Coast & --- \\
+GOS04 & North American East Coast & --- \\
+GOS05 & North American East Coast & --- \\
+GOS06 & North American East Coast & --- \\
+GOS07 & North American East Coast & --- \\
+GOS08 & North American East Coast & --- \\
+GOS09 & North American East Coast & --- \\
+GOS10 & North American East Coast & --- \\
+GOS11 & North American East Coast & --- \\
+GOS12 & North American East Coast & --- \\
+GOS13 & North American East Coast & --- \\
+GOS14 & North American East Coast & --- \\
+GOS15 & Caribbean Sea             & --- \\
+GOS16 & Caribbean Sea             & --- \\
+GOS17 & Caribbean Sea             & --- \\
+GOS18 & Caribbean Sea             & --- \\
+GOS19 & Caribbean Sea             & --- \\
+GOS20 & Panama Canal              & --- \\
+GOS21 & Eastern Tropical Pacific  & --- \\
+GOS22 & Eastern Tropical Pacific  & --- \\
+GOS23 & Eastern Tropical Pacific  & --- \\
+GOS24 & Eastern Tropical Pacific  & --- \\
+GOS25 & Galapagos Islands         & --- \\
+GOS26 & Galapagos Islands         & --- \\
+GOS27 & Galapagos Islands         & --- \\
+GOS28 & Galapagos Islands         & --- \\
+GOS29 & Galapagos Islands         & --- \\
+GOS30 & Galapagos Islands         & --- \\
+GOS31 & Galapagos Islands         & --- \\
+GOS32 & Galapagos Islands         & --- \\
+GOS33 & Galapagos Islands         & --- \\
+GOS34 & Galapagos Islands         & --- \\
+GOS35 & Galapagos Islands         & --- \\
+GOS36 & Eastern Tropical Pacific  & --- \\
+\hline
+\end{tabular}
+\caption{Sample metadata: Part 1 of 2}
+\label{tab:samples_part1}
+\end{table}
+\begin{table}[ht]
+\centering
+\begin{tabular}{|c|l|c|}
+\hline
+\textbf{Sample ID} & \textbf{Geographical Label} & \textbf{Dimension (KB)} \\
+\hline
+GOS46 & Tropical South Pacific      & --- \\
+GOS47 & Polynesia Archipelagos     & --- \\
+GOS48 & Polynesia Archipelagos     & --- \\
+GOS49 & Polynesia Archipelagos     & --- \\
+GOS50 & Polynesia Archipelagos     & --- \\
+GOS51 & North American East Coast  & --- \\
+GOS52 & Polynesia Archipelagos     & --- \\
+GOS53 & Indian Ocean               & --- \\
+GOS54 & Indian Ocean               & --- \\
+GOS55 & Indian Ocean               & --- \\
+GOS56 & Indian Ocean               & --- \\
+GOS57 & Indian Ocean               & --- \\
+GOS59 & Indian Ocean               & --- \\
+GOS60 & Indian Ocean               & --- \\
+GOS61 & Indian Ocean               & --- \\
+GOS62 & Indian Ocean               & --- \\
+GOS63 & Indian Ocean               & --- \\
+GOS64 & Indian Ocean               & --- \\
+GOS65 & Indian Ocean               & --- \\
+GOS66 & Indian Ocean               & --- \\
+GOS67 & Indian Ocean               & --- \\
+GOS68 & Indian Ocean               & --- \\
+GOS69 & Indian Ocean               & --- \\
+GOS70 & Indian Ocean               & --- \\
+GOS71 & Indian Ocean               & --- \\
+GOS72 & Indian Ocean               & --- \\
+GOS73 & Indian Ocean               & --- \\
+GOS74 & Indian Ocean               & --- \\
+GOS75 & Indian Ocean               & --- \\
+GOS76 & Coccos Keeling, Inside Lagoon & --- \\
+GOS77 & Indian Ocean               & --- \\
+GOS78 & Sargasso Sea               & --- \\
+GOS79 & Sargasso Sea               & --- \\
+GOS80 & Sargasso Sea               & --- \\
+GOS81 & Sargasso Sea               & --- \\
+\hline
+\end{tabular}
+\caption{Sample metadata: Part 2 of 2}
+\label{tab:samples_part2}
+\end{table}
+
+
 \url{https://datacommons.cyverse.org/browse/iplant/home/shared/imicrobe/projects/26/samples}

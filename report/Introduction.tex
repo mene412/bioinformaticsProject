@@ -1,0 +1,53 @@
+\section{Introduction}
+\subsection{Data mining techniques}
+\subsubsection{PAM}
+The PAM algorithm is very similar to \(k\)-means, mostly because both are partitional algorithms, in other words, both break the dataset into groups (clusters), and both work by trying to minimize the error, but PAM works with Medoids, that are an entity of the dataset that represent the group in which it is inserted, and \(k\)-means works with Centroids, that are artificially created entity that represent its cluster.
+
+The PAM algorithm partitions the dataset of \(n\) objects into \(k\) clusters, where both the dataset and the number \(k\) is an input of the algorithm. This algorithm works with a matrix of dissimilarity, whose goal is to minimize the overall dissimilarity between the representants of each cluster and its members. The algorithm uses the following model to solve the problem:
+\[F(x) = \text{minimize} \sum_{i=1}^{n} \sum_{j=1}^{n} d(i,j) z_{ij}\]
+Subject to:\\
+\(\sum_{i=1}^n z_{ij} = 1, j=1,2,..,n\)\\
+\(z_{ij} \leq y_{i}, i,j = 1,2,..,n\)\\
+\(\sum_{i=1}^n y_{i} = k, k = \text{number of clusters}\)\\
+\(y_{i}, z_{ij} \in \{0,1\} , i,j = 1,2,..,n\)\\
+Where:
+\begin{itemize}
+    \item \(d(i,j)\): dissimilarity measurement between the entities \(i\) and \(j\)
+    \item \(z_{ij}\): a variable that ensures that only the dissimilarity between entities from the same cluster will be computed in the main function
+\end{itemize}
+The others expressions are constraints that have the following functions: 
+\begin{enumerate}
+    \item ensures that every single entity is assigned to one cluster and only one cluster, 
+    \item ensures that the entity is assigned to its medoid that represents the cluster, 
+    \item ensures that there are exactly k clusters and 
+    \item lets the decision variables assume just the values of 0 or 1. 
+\end{enumerate}
+2 kinds of input:
+\begin{itemize}
+    \item matrix of every entity and values of its variables
+    \item dissimilarity matrix
+\end{itemize}
+\paragraph{Algorithm}
+Input:\\
+\(O\): set of objects\\
+\(S\): set of selected objects, medoids\\
+\(U = O - S\): set of unselected objects\\
+\(D_p\): dissimilarity between \(p\) and the closest object in \(S\), \(p \in S\) if and only if \(D_p = 0\)\\
+\(E_p\): the dissimilarity between \(p\) and the second closest object in \(S\), \(D_j \leq E_j\)
+\begin{itemize}
+    \item \textbf{BUILD PHASE}
+    \begin{enumerate}
+        \item Choose \(k\) entities to become the medoids (set \(S\)), or in case these entities were provided use them as the medoids;
+        \item Calculate the dissimilarity matrix if it was not informed;
+        \item Assign every entity to its closest medoid;
+    \end{enumerate}
+    \item \textbf{SWAP PHASE}
+    \begin{enumerate}
+        \setcounter{enumi}{3}
+        \item For each cluster search if any of the entities of the cluster (elemnt of set \(U\)) lower the average dissimilarity coefficient, if it does select the entity that lowers this coefficient the most as the medoid for this cluster;
+        \item If at least one medoid (element of \(S\)) has changed go to (3), else end the algorithm.
+    \end{enumerate}
+\end{itemize}
+\subsubsection{CLARA}
+\subsubsection{CLARANS}
+\subsubsection{DBSCAN}
