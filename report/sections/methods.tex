@@ -54,7 +54,7 @@ A way to reduce the number of distances calculated to create a clustering could 
 
 The CLARANS algorithm is different from PAM and CLARA: it is not performed a check for every pair (medoid, non-medoid) to find a possible diminishing of the loss function (sum of square distances from the nearest medoid), instead it is thought an underlying graph abstraction of the problem, where each node is a collection of k points, representing the medoids and every arch is the swap of a medoid with a non-medoid.
 
-The CLARANS algorithm searches in this highly connected graph for some neighbours that bring a lowering of the loss function - and it does so until it finds a local minimum. For each step, the number of neighbours checked is not the entire set of nodes at distance 1 from the current one, instead there is a parameter, \italic{numneighbours}, that manages the level of time spent on a node.
+The CLARANS algorithm searches in this highly connected graph for some neighbours that bring a lowering of the loss function - and it does so until it finds a local minimum. For each step, the number of neighbours checked is not the entire set of nodes at distance 1 from the current one, instead there is a parameter, \textit{numneighbours}, that manages the level of time spent on a node.
 
 Moreover, after finding a certain amount - numlocal - of local minima, the one that leads to the lowest value of the loss function is returned
 
@@ -101,72 +101,136 @@ where $w$ is a k-mer and $N_{S_i}(w)$ is the abundance of $w$ in the dataset $S_
 \subsubsection{Jaccard}
 
 \subsection{Evaluation metrics} %todo add citation
-In our case we are dealing with a multi-class classification task, for evaluation we can use macro- or micro-average precision and recall (\cite{MultiClass_Evaluation_Metrics}). Macro-averaging gives equal weight to each class, while micro-averaging gives equal weight to each instance.
+Evaluating how well the clustering has performed can be approached as a classification problem. In a typical binary classification setting, predicted values are compared with the true (actual) values, and each prediction can be categorized as either Positive or Negative.
 
-Accuracy $ACC$ measures the proportion of correctly classified cases from the total number of objects in the dataset.
-\begin{equation}
-    ACC = \frac{\text{correct prediction}}{\text{all predictions}}
-\end{equation}
-
-accuracy has its downsides. While it does provide an estimate of the overall model quality, it disregards class balance and the cost of different errors. 
-
-You can use them in multi-class classification problems as well, there are different approaches to how to do that, each with its pros and cons. 
-
+When evaluating classification results, there are four possible outcomes:
 \begin{itemize}
-    \item Precision and recall by class
-    
-    Precision $P_A$ for a given class $A$ in multi-class classification is the fraction of instances correctly classified as belonging to a specific class out of all instances the model predicted to belong to that class. 
-
-    \begin{equation}
-        P_A = \frac{TP_A}{TP_A + FP_A}
-    \end{equation}
-
-    Recall $R_A$ for a given class $A$ in multi-class classification is the fraction of instances in a class that the model correctly classified out of all instances in that class. 
-
-    \begin{equation}
-        R_A = \frac{TP_A}{TP_A + FN_A}
-    \end{equation}
-
-    \item Averaging precision and recall
-    
-    \begin{itemize}
-        \item Macro-averaging
-        \begin{equation}
-            P_\text{macro-averaging} = \frac{P_A + P_B + \dots + P_N}{N}
-        \end{equation}
-        \begin{equation}
-            R_\text{macro-averaging} = \frac{R_A + R_B + \dots + R_N}{N}
-        \end{equation}
-        \item Micro-averaging
-        \begin{equation}
-            P_\text{micro-averaging} = \frac{TP_A + TP_B + \dots + TP_N}{TP_A + FP_A + TP_B + FP_B + \dots + TP_A + FP_N}
-        \end{equation}
-        \begin{equation}
-            R_\text{micro-averaging} = \frac{TP_A + TP_B + \dots + TP_N}{TP_A + FN_A + TP_B + FN_B + \dots + TP_A + FN_N}
-        \end{equation}
-    \end{itemize}
-    
-
+\item TP (True Positive): The predicted value is Positive, and the actual value is also Positive.
+\item FP (False Positive): The predicted value is Positive, but the actual value is Negative.
+\item FN (False Negative): The predicted value is Negative, but the actual value is Positive.
+\item TN (True Negative): The predicted value is Negative, and the actual value is also Negative.
+\end{itemize}
+Two commonly used metrics are:
+\begin{itemize}
+    \item Precision, which measures how many of the predicted Positive values are actually Positive: TP/(TP+FP)
+    \item Recall, which measures how many of the actual Positive values are correctly predicted: TP/(TP+FN)
+    %\item Accuracy, which measures the proportion of correct classification, both TP and TN: (TP+TN)/(TP+TN+FP+FN)
+    \item F1-score, the harmonic mean of precision and recall: 2 \(\times\) (precision \(\times\) recall)/(precision + recall)
 \end{itemize}
 
-In the first case, you can calculate the precision and recall for each class individually. This way, you get multiple metrics based on the number of classes you have in the dataset.\\
-In the second case, you can "average" precision and recall across all the classes to get a single number. You can use different methods to average the precision, such as macro- or micro-averaging.
+But in this project we are dealing with a multi-class classification task, we need to categorize each sample into 1 of \(N\) different classes. We need to combine the per-class scores into a single number, the classifier's overall score.
 
-Moreover it is possible to use F1 as a parameter that joins the information given by both precision and recall. The formula of F1 for any class A is:
+Define:
+\begin{itemize}
+    \item \(N\): total number of classes
+    \item \(n\): total number of actual values
+    \item \(x_\alpha\): number of actual values for the class \(\alpha\)
+    \item \(P_\alpha\): precision for the class \(\alpha\)%, computed as \(P_A = \frac{TP_A}{TP_A + FP_A}\)
+    \item \(R_\alpha\): precision for the class \(\alpha\)%, computed as \(R_A = \frac{TP_A}{TP_A + FN_A}\)
+    \item \(F1_\alpha\): F1-score for the class \(\alpha\)
+\end{itemize} 
+
+\paragraph{Macro-averaged scores}
+Each score is computed as a simple arithmetic mean of our per-class scores.
 \begin{equation}
-            F1_A = 2 \cdot \frac{P_A \cdot R_A}{P_A + R_A}
+    P_\text{macro-averaging} = \frac{P_A + P_B + \dots + P_N}{N}
+\end{equation}
+\begin{equation}
+    R_\text{macro-averaging} = \frac{R_A + R_B + \dots + R_N}{N}
+\end{equation}
+\begin{equation}
+    F1_\text{macro-averaging} = \frac{F1_A + F1_B + \dots + F1_N}{N}
+\end{equation}
+\paragraph{Weighted-averaged scores}
+The scores of each class are weighted by the number of samples from that class, differently from macro-averaged where each class has same weigth.
+\begin{equation}
+    P_\text{weighted-averaging} = \frac{P_A x_A + P_B x_B + \dots + P_N x_N}{n}
+\end{equation}
+\begin{equation}
+    R_\text{weighted-averaging} = \frac{R_A x_A + R_B x_B + \dots + R_N x_N}{n}
+\end{equation}
+\begin{equation}
+    F1_\text{weighted-averaging} = \frac{F1_A x_A + F1_B x_B + \dots + F1_N x_N}{n}
+\end{equation}
+\paragraph{Micro-averaged scores}
+Gives equal weight to each instance. We first compute micro-averaged precision and micro-averaged recall over all the samples, and then combine the two.
+\begin{equation}
+    P_\text{micro-averaging} = \frac{TP_A + TP_B + \dots + TP_N}{TP_A + FP_A + TP_B + FP_B + \dots + TP_A + FP_N}
+\end{equation}
+\begin{equation}
+    R_\text{micro-averaging} = \frac{TP_A + TP_B + \dots + TP_N}{TP_A + FN_A + TP_B + FN_B + \dots + TP_A + FN_N}
+\end{equation}
+We can observe that \(FP_A + FP_B + \dots + FP_N = FN_A + FN_B + \dots + FN_N\), because are all the values falsely classified. So 
+\begin{equation}
+    R_\text{micro-averaging}= P_\text{micro-averaging} = F1_\text{micro-averaging}
 \end{equation}
 
-In the context of multiclass evaluation, you can either calculate the F1-score for each class, or instead averaging the different values obtained in an only parameter. As before this can be done with macro-averaging or micro-averaging.
+%for evaluation we can use macro- or micro-average precision and recall (\cite{MultiClass_Evaluation_Metrics}). Macro-averaging gives equal weight to each class, while micro-averaging gives equal weight to each instance.
 
-The formulas for the two types of averaging are:
-\begin{equation}
-            F1_\text{macro-averaging} = \frac{F1_A + F1_B + \cdots + F1_N}{N}
-\end{equation}
+% Accuracy $ACC$ measures the proportion of correctly classified cases from the total number of objects in the dataset.
+% \begin{equation}
+%     ACC = \frac{\text{correct prediction}}{\text{all predictions}}
+% \end{equation}
 
-\begin{equation}
-            F1_\text{micro-averaging} = 2 \cdot \frac{P_\text{micro-averaging} \cdot R_\text{micro-averaging}}{P_\text{micro-averaging} + R_\text{micro-averaging}}
-\end{equation}
+% accuracy has its downsides. While it does provide an estimate of the overall model quality, it disregards class balance and the cost of different errors. 
+
+% You can use them in multi-class classification problems as well, there are different approaches to how to do that, each with its pros and cons. 
+
+% \begin{itemize}
+%     \item Precision and recall by class
+    
+%     Precision $P_A$ for a given class $A$ in multi-class classification is the fraction of instances correctly classified as belonging to a specific class out of all instances the model predicted to belong to that class. 
+
+%     \begin{equation}
+%         P_A = \frac{TP_A}{TP_A + FP_A}
+%     \end{equation}
+
+%     Recall $R_A$ for a given class $A$ in multi-class classification is the fraction of instances in a class that the model correctly classified out of all instances in that class. 
+
+%     \begin{equation}
+%         R_A = \frac{TP_A}{TP_A + FN_A}
+%     \end{equation}
+
+%     \item Averaging precision and recall
+    
+%     \begin{itemize}
+%         \item Macro-averaging
+%         \begin{equation}
+%             P_\text{macro-averaging} = \frac{P_A + P_B + \dots + P_N}{N}
+%         \end{equation}
+%         \begin{equation}
+%             R_\text{macro-averaging} = \frac{R_A + R_B + \dots + R_N}{N}
+%         \end{equation}
+%         \item Micro-averaging
+%         \begin{equation}
+%             P_\text{micro-averaging} = \frac{TP_A + TP_B + \dots + TP_N}{TP_A + FP_A + TP_B + FP_B + \dots + TP_A + FP_N}
+%         \end{equation}
+%         \begin{equation}
+%             R_\text{micro-averaging} = \frac{TP_A + TP_B + \dots + TP_N}{TP_A + FN_A + TP_B + FN_B + \dots + TP_A + FN_N}
+%         \end{equation}
+%     \end{itemize}
+    
+
+% \end{itemize}
+
+% In the first case, you can calculate the precision and recall for each class individually. This way, you get multiple metrics based on the number of classes you have in the dataset.\\
+% In the second case, you can "average" precision and recall across all the classes to get a single number. You can use different methods to average the precision, such as macro- or micro-averaging.
+
+% Moreover it is possible to use F1 as a parameter that joins the information given by both precision and recall. The formula of F1 for any class A is:
+% \begin{equation}
+%             F1_A = 2 \cdot \frac{P_A \cdot R_A}{P_A + R_A}
+% \end{equation}
+
+% In the context of multiclass evaluation, you can either calculate the F1-score for each class, or instead averaging the different values obtained in an only parameter. As before this can be done with macro-averaging or micro-averaging.
+
+% The formulas for the two types of averaging are:
+% \begin{equation}
+%             F1_\text{macro-averaging} = \frac{F1_A + F1_B + \cdots + F1_N}{N}
+% \end{equation}
+
+% \begin{equation}
+%             F1_\text{micro-averaging} = 2 \cdot \frac{P_\text{micro-averaging} \cdot R_\text{micro-averaging}}{P_\text{micro-averaging} + R_\text{micro-averaging}}
+% \end{equation}
 
 \subsection{Dataset}
 The dataset used for the report consists in one project of the GOS (Global Ocean Sampling) marine dataset, which contains reads sequenced with Sanger (prevalently) and pyrosequencing.
