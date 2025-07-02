@@ -6,10 +6,26 @@
     \caption{Our pipeline}
     \label{fig:pipeline}
 \end{figure}
-We implement in Python the PAM and CLARANS algorithms, using both jaccard and bray-curtis distances. We tested CLARANS with different size of the random subset, resulting with different datasets.
-
+We develop in Python the CLARANS algorithm, in which we used the BrayCurtis distance. The algorithm has different input parameter:
+\begin{itemize}
+    \item \verb|samples|: the list of samples, each sample is represented by a dictionary with the following keys:
+    \begin{itemize}
+        \item \verb|id| (str): Identifier for the sample, retrieved from the filename in the format '\verb|GOSXX|'.
+        \item \verb|kmers| (set of str): A set of all unique k-mers found in the sample.
+        \item \verb|counts| (dict of {str: int}): A dictionary mapping each k-mer to its count in the sample.
+        \item \verb|label| (int): Default label for the sample. Initialized to -1.
+        \item \verb|second_label| (int): Secondary label for the sample. Initialized to -1.
+        \item \verb|ambiental_label| (str or int): Additional label for environmental context, retrieved from `\verb|true_labels.txt|`.
+    \end{itemize}
+    \item \verb|num_clusters|: the number of cluster wanted, in our case 10 beacues the dataset has 10 distinct labels.
+    \item \verb|numlocal|: the number of local minima to search, %todo 'we set it to ... beacuse...
+    \item \verb|maxneighbor|: the maximum number of neighbors to explore per local search, we try different values, from ..., the maximum number possible that correspond to the number of samples, and .... %todo complete with numbers
+    %todo eventually remove metric if we modify the code
+    \item \verb|metric|: the metric to use, in our case the BrayCurtis distance.
+\end{itemize}
 Then we evaluate the clusterings. Using the labels of the sample derived from the dataset, we find a majority label for using the evaluation metrics, computing macro- and micro-averaging.
 
 Show some code?
 
 Blade slurms
+% labels non aggiornate, solo indicateive: Counter({'indian ocean': 23, 'north american east coast': 14, 'galapagos islands': 11, 'tropical south pacific': 10, 'sargasso sea': 7, 'caribbean sea': 5, 'polynesia archipelagos': 5, 'eastern tropical pacific': 5, 'coccos keeling , inside lagoon': 1, 'panama canal': 1})
