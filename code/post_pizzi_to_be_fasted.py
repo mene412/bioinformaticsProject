@@ -6,6 +6,8 @@ import os
 import time
 import sys
 from evaluation import compute_evaluation_metrics
+import tracemalloc
+
 
 
 def valid_kmers(seq, k):
@@ -59,6 +61,9 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
         - 'ambiental_label' : str or int  
             Additional label for environmental context, retrieved from `true_labels.txt`.
     """
+
+    tracemalloc.start()
+
     samples = []
     for filename in os.listdir(samples_folder_path):
         if filename.endswith('.fasta') or filename.endswith('.fa'):
@@ -77,7 +82,9 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
                 num_reads += 1
                 if num_reads % 10000 == 0:
                     print(f"Processed {num_reads} reads so far...")
+                    print(tracemalloc.get_traced_memory())
                 kmer_counter.update(valid_kmers(str(record.seq), k))
+                
             end_time = time.time()
 
 
@@ -111,7 +118,7 @@ def prepare_all_samples(samples_folder_path, k, true_labels_path):
             start_time = time.time()
             samples.append({
                 'id': id,
-                'kmers': set(kmer_counter.keys()),
+                # 'kmers': set(kmer_counter.keys()),
                 'counts': kmer_counter,
                 'label': -1,
                 'second_label': -1,
@@ -373,7 +380,7 @@ def main():
     # dataset_folder_path = "C:\\Users\\Lorenzo Berlese\\Desktop\\metagenomics project\\alcuni_dataset_gos"               # Replace with actual path
     # true_labels_path = "C:\\Users\\Lorenzo Berlese\\Desktop\\metagenomics project\\true_labels.txt"     # Replace with actual path
 
-    dataset_folder_path = "/nfsd/bcb/bcbg/berleselor/datasets"               # Replace with actual path
+    dataset_folder_path = "/nfsd/bcb/bcbg/berleselor/dataset_singolo"               # Replace with actual path
     true_labels_path = "/nfsd/bcb/bcbg/meneghinma/input/true_labels.txt"     # Replace with actual path
 
     k_mer_size = 21                        # Adjust k-mer size as needed
