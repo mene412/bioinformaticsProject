@@ -2,29 +2,24 @@ from collections import defaultdict, Counter
 
 def find_majority_label(clustered_samples):
     """
-    Determines the most frequent 'ambiental_label' within each cluster.
-
-    Parameters
-    ----------
-    clustered_samples : list of dict
-        A list of sample dictionaries, each containing:
-            - 'id': str, identifier of the sample
-            - 'kmers': set, set of k-mers
-            - 'label': int, cluster ID
-            - 'second_label': int, optional secondary label
-            - 'ambiental_label': str, the true environmental label (e.g., Caribbean Sea, Galapagos Islands)
-
-    Returns
-    -------
-    majority_labels : list of dict
-        A list of dictionaries where each dictionary contains:
-            - 'cl_id': int, the cluster ID
-            - 'majority_label': str, the most common 'ambiental_label' in the cluster
-
-        Example:
+    Based on the label (the cluster id), returns the most present ambient_label present in that cluster
+    
+    Input:
+    - clustered_samples: list of dict, example: 
+        [{
+            'id': id,  # Use filename without extension as ID
+            'kmers': set(all_kmers),
+            'label': -1,
+            'second_label': -1,
+            'ambiental_label': ambiental_label
+        }, ...]
+    Return:
+    - majority_labels: list of dicts, example:
         [
-            {'cl_id': 1, 'majority_label': 'Caribbean Sea'},
-            {'cl_id': 2, 'majority_label': 'Galapagos Islands'},
+            {
+                'cl_id': 1,
+                'majority_label': ambiental_label
+            },
             ...
         ]
     """
@@ -32,7 +27,7 @@ def find_majority_label(clustered_samples):
     # Group ambiental_labels by cluster label
     clusters = defaultdict(list)
     for sample in clustered_samples:
-        cl_id = sample['label']
+        cl_id = sample['center']
         amb_label = sample['ambiental_label']
         clusters[cl_id].append(amb_label)
     
@@ -52,15 +47,10 @@ def compute_evaluation_metrics(clustered_samples):
     Computes per-label (ambiental_label) precision, recall,
     as well as macro and micro averages.
 
-    Parameters
-    -----------
-        clustered_samples
-
-    Returns
-    ---------
-        label_metrics: dict per ambiental_label
-        macro_avg: dict
-        micro_avg: dict
+    Returns:
+    - label_metrics: dict per ambiental_label
+    - macro_avg: dict
+    - micro_avg: dict
     """
     print('* - - - COMPUTE EVALUATION METRICS - - - *')
     majority_labels = find_majority_label(clustered_samples)
@@ -72,7 +62,7 @@ def compute_evaluation_metrics(clustered_samples):
     # Count TP, FP, FN
     for sample in clustered_samples:
         true_label = sample['ambiental_label']
-        cl_id = sample['label']
+        cl_id = sample['center']
         predicted_label = clid_to_majority.get(cl_id)
 
         if predicted_label == true_label:
@@ -122,3 +112,14 @@ def compute_evaluation_metrics(clustered_samples):
     print("Micro-Averaged Metrics:", micro_avg)
 
     return label_metrics, macro_avg, micro_avg
+
+# testing
+# samples = [
+#     {'id': 'a', 'kmers': {'A'}, 'label': 0, 'second_label': -1, 'ambiental_label': 'indoor'},
+#     {'id': 'b', 'kmers': {'B'}, 'label': 0, 'second_label': -1, 'ambiental_label': 'indoor'},
+#     {'id': 'c', 'kmers': {'C'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'outdoor'},
+#     {'id': 'd', 'kmers': {'D'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'outdoor'},
+#     {'id': 'e', 'kmers': {'E'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'indoor'},
+# ]    
+
+# compute_evaluation_metrics(samples)
