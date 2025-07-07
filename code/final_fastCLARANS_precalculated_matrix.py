@@ -213,13 +213,14 @@ def main():
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(f"Medoids: {medoids}, Runtime: {end_time - start_time:.2f}s\n\n")
 
-        label_metrics, macro_avg, micro_avg = compute_evaluation_metrics(samples)
+        label_metrics, macro_avg, weighted_avg, micro_avg = compute_evaluation_metrics(samples)
         with open(output_file, "a", encoding="utf-8") as f:
             f.write('- - - RESULTS - - -\n')
             for label, m in label_metrics.items():
                 f.write(f"Label '{label}': TP={m['TP']}, FP={m['FP']}, FN={m['FN']}, "
                     f"Precision={m['precision']:.2f}, Recall={m['recall']:.2f}, F1score={m['F1score']:.2f}\n")
             f.write(f"Macro-Averaged Metrics: {macro_avg}\n")
+            f.write(f"Weighted-Averaged Metrics: {weighted_avg}\n")
             f.write(f"Micro-Averaged Metrics: {micro_avg}\n\n\n")
 
 

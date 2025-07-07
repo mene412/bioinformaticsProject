@@ -92,6 +92,30 @@ def compute_evaluation_metrics(clustered_samples):
         'macro_F1score': sum(m['F1score'] for m in label_metrics.values()) / len(label_metrics),
     }
 
+    # Compute total number of samples (denominator n)
+    total_support = sum(label_metrics[label]['TP'] + label_metrics[label]['FN'] for label in label_metrics)
+
+    weighted_precision = sum(
+        label_metrics[label]['precision'] * (label_metrics[label]['TP'] + label_metrics[label]['FN'])
+        for label in label_metrics
+    ) / total_support if total_support > 0 else 0.0
+
+    weighted_recall = sum(
+        label_metrics[label]['recall'] * (label_metrics[label]['TP'] + label_metrics[label]['FN'])
+        for label in label_metrics
+    ) / total_support if total_support > 0 else 0.0
+
+    weighted_F1score = sum(
+        label_metrics[label]['F1score'] * (label_metrics[label]['TP'] + label_metrics[label]['FN'])
+        for label in label_metrics
+    ) / total_support if total_support > 0 else 0.0
+
+    weighted_avg = {
+        'weighted_precision': weighted_precision,
+        'weighted_recall': weighted_recall,
+        'weighted_F1score': weighted_F1score,
+    }
+
     # Micro averaging
     micro_precision = total_TP / (total_TP + total_FP) if (total_TP + total_FP) > 0 else 0.0
     micro_recall = total_TP / (total_TP + total_FN) if (total_TP + total_FN) > 0 else 0.0
@@ -109,9 +133,10 @@ def compute_evaluation_metrics(clustered_samples):
         print(f"Label '{label}': TP={m['TP']}, FP={m['FP']}, FN={m['FN']}, "
               f"Precision={m['precision']:.2f}, Recall={m['recall']:.2f}, F1score={m['F1score']:.2f}")
     print("Macro-Averaged Metrics:", macro_avg)
+    print("Weigthed-Averaged Metrics:", weighted_avg)
     print("Micro-Averaged Metrics:", micro_avg)
 
-    return label_metrics, macro_avg, micro_avg
+    return label_metrics, macro_avg, weighted_avg, micro_avg
 
 # testing
 # samples = [
