@@ -7,12 +7,11 @@ import time
 from evaluation import compute_evaluation_metrics
 import math
 import pandas as pd
+from scipy import stats
 
 def fastCLARANS(samples, k, numlocal, maxneighbor, metric, distance_matrix):
     # print(f"Running fastCLARANS with k={k}, numlocal={numlocal}, maxneighbor={maxneighbor}, metric={metric}")
     file_fastCLARANS = "C:/Users/Lorenzo Berlese/Desktop/the end is near/fastCLARANS_" + str(maxneighbor) + ".txt"
-    with open(file_fastCLARANS, "w", encoding="utf-8") as f:
-        f.write(f"start\n")
     
     n = len(samples)
     combinations = math.comb(n, k)
@@ -59,18 +58,18 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric, distance_matrix):
 
         # give a center to each sample in samples
         # calculate second nearest medoid
-        print(f"Assigning medoids for iteration {_}...")
-        with open(file_fastCLARANS, "a", encoding="utf-8") as f:
-            f.write("going to assign medoids\n")
+        #print(f"Assigning medoids for iteration {_}...")
         start_time = time.time()
         current_cost = assign(current, samples, metric)
         #print("current_cost = ", current_cost)
         end_time = time.time()
-
+        '''
         with open(file_fastCLARANS, "a", encoding="utf-8") as f:
             f.write(f"Medoids assigned in {end_time - start_time:.2f}s\n")
             f.write(f"local n: {_}\n")
+        '''
         num_swaps = 0
+        
 
         # step 3) j = 1
         j = 1
@@ -139,6 +138,7 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric, distance_matrix):
                 assign(current, samples, metric)
                 j = 1
                 num_swaps += 1
+                '''
                 if num_swaps % 100 == 0:
                     with open(file_fastCLARANS, "a", encoding="utf-8") as f:
                         f.write(f"Swap {num_swaps} with cost change {delta_TS[min_index]:.5f}\n")
@@ -146,6 +146,7 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric, distance_matrix):
                 if num_swaps > combinations:
                     with open(file_fastCLARANS, "a", encoding="utf-8") as f:
                         f.write(f"reached max num_swaps: {num_swaps}\n")
+                '''
                     
             else:
                 j += 1
@@ -162,10 +163,7 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, metric, distance_matrix):
             bestnode = current.copy()
     end_time = time.time()
 
-    with open(file_fastCLARANS, "a", encoding="utf-8") as f:
-            f.write(f"Number of distances computed in this run: {how_many_cells_used}\n")
-            f.write(f"Runtime: {end_time - start_time:.2f}s\n")
-    return bestnode
+    return bestnode, how_many_cells_used, end_time - start_time
 
 
 def main():
@@ -200,33 +198,100 @@ def main():
                 'second': -1,  # or some default value
                 'ambiental_label': label,
             })
+
+    for maxneighbor in [10, 20, 30]:
+        macro_F1s = []
+        micro_F1s = []
+        weighted_F1s = []
+        macro_precisions = []
+        micro_precisions = []
+        weighted_precisions = []
+        macro_recalls = []
+        micro_recalls = []
+        weighted_recalls = []
+        cells_used = []
+        runtimes = []
+
+        for iteration in range(100):
+            output_file = f"C:/Users/Lorenzo Berlese/Desktop/the end is near/cluster{maxneighbor}.txt"
+            #print(f"\nRunning fastCLARANS with maxneighbor = {maxneighbor}")
+            start_time = time.time()    
+            medoids, cells, runtime = fastCLARANS(samples, num_clusters, numlocal, maxneighbor,
+                                    metrics, distance_matrix)
+            end_time = time.time()
+
+            
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(f"Medoids: {medoids}, Runtime: {end_time - start_time:.2f}s\n\n")
+            
+
+            label_metrics, macro_avg, micro_avg, weighted_avg = compute_evaluation_metrics(samples)
+            macro_F1s.append(macro_avg['macro_F1score'])
+            micro_F1s.append(micro_avg['micro_F1score'])
+            weighted_F1s.append(weighted_avg['weighted_F1score'])
+            macro_precisions.append(macro_avg['macro_precision'])
+            micro_precisions.append(micro_avg['micro_precision'])
+            weighted_precisions.append(weighted_avg['weighted_precision'])
+            macro_recalls.append(macro_avg['macro_recall'])
+            micro_recalls.append(micro_avg['micro_recall'])
+            weighted_recalls.append(weighted_avg['weighted_recall'])
+            cells_used.append(cells)
+            runtimes.append(runtime)
+            '''
+            with open(output_file, "a", encoding="utf-8") as f:
+                f.write('- - - RESULTS - - -\n')
+                for label, m in label_metrics.items():
+                    f.write(f"Label '{label}': TP={m['TP']}, FP={m['FP']}, FN={m['FN']}, "
+                        f"Precision={m['precision']:.2f}, Recall={m['recall']:.2f}, F1score={m['F1score']:.2f}\n")
+                f.write(f"Macro-Averaged Metrics: {macro_avg}\n")
+                f.write(f"Micro-Averaged Metrics: {micro_avg}\n")
+                f.write(f"Weighted-Averaged Metrics: {weighted_avg}\n\n\n")
+
+            with open(output_file, "a", encoding="utf-8") as f:
+                for s in samples:
+                    f.write(f"id of sample: {s['id']}\nCenter given: {s['center']}\nSecond center: {s['second']}\nLabel: {s['ambiental_label']}\n\n")
+            '''
+        
+        all_metrics = {
+            'macro_F1s': macro_F1s,
+            'micro_F1s': micro_F1s,
+            'weighted_F1s': weighted_F1s,
+            'macro_precisions': macro_precisions,
+            'micro_precisions': micro_precisions,
+            'weighted_precisions': weighted_precisions,
+            'macro_recalls': macro_recalls,
+            'micro_recalls': micro_recalls,
+            'weighted_recalls': weighted_recalls,
+            'cells_used': cells_used,
+            'runtimes': runtimes
+        }
+
+        '''
+        print(f"All metrics for maxneighbour = {maxneighbor}:")
+        for metric_name, values in all_metrics.items():
+            formatted_values = [round(v, 2) for v in values]
+            print(f"  {metric_name}: {formatted_values}")
+        '''
+
+        
+        confidence = 0.95
+        with open(output_file, "a", encoding="utf-8") as f:
+            f.write(f"\n\n- - - FINAL RESULTS FOR maxneighbor = {maxneighbor} - - -\n")
+            for metric_name, metric_values in all_metrics.items():
+                data = np.array(metric_values)
+                mean_value = np.mean(data)
+                std_value = np.std(data, ddof=1)
+                if std_value == 0:
+                    confidence_interval = (mean_value, mean_value)
+                else:
+                    df = len(data) - 1
+                    confidence_interval = stats.t.interval(confidence, df, loc=mean_value, scale=std_value / np.sqrt(len(data)))
+            
+
+                f.write(f"{metric_name} - Mean: {mean_value:.4f}, Std: {std_value:.4f}, "
+                        f"Confidence Interval: {confidence_interval[0]:.4f} to {confidence_interval[1]:.4f}\n")
+
     
-    for maxneighbor in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 448]:
-
-        output_file = f"C:/Users/Lorenzo Berlese/Desktop/the end is near/cluster{maxneighbor}.txt"
-        #print(f"\nRunning fastCLARANS with maxneighbor = {maxneighbor}")
-        start_time = time.time()    
-        medoids = fastCLARANS(samples, num_clusters, numlocal, maxneighbor,
-                                metrics, distance_matrix)
-        end_time = time.time()
-
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(f"Medoids: {medoids}, Runtime: {end_time - start_time:.2f}s\n\n")
-
-        label_metrics, macro_avg, weighted_avg, micro_avg = compute_evaluation_metrics(samples)
-        with open(output_file, "a", encoding="utf-8") as f:
-            f.write('- - - RESULTS - - -\n')
-            for label, m in label_metrics.items():
-                f.write(f"Label '{label}': TP={m['TP']}, FP={m['FP']}, FN={m['FN']}, "
-                    f"Precision={m['precision']:.2f}, Recall={m['recall']:.2f}, F1score={m['F1score']:.2f}\n")
-            f.write(f"Macro-Averaged Metrics: {macro_avg}\n")
-            f.write(f"Weighted-Averaged Metrics: {weighted_avg}\n")
-            f.write(f"Micro-Averaged Metrics: {micro_avg}\n\n\n")
-
-
-        with open(output_file, "a", encoding="utf-8") as f:
-            for s in samples:
-                f.write(f"id of sample: {s['id']}\nCenter given: {s['center']}\nSecond center: {s['second']}\nLabel: {s['ambiental_label']}\n\n")
 
 
 if __name__ == "__main__":

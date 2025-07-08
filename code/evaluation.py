@@ -23,7 +23,8 @@ def find_majority_label(clustered_samples):
             ...
         ]
     """
-    print('- - - FIND MAJORITY LABELS - - -')
+    
+    #print('- - - FIND MAJORITY LABELS - - -')
     # Group ambiental_labels by cluster label
     clusters = defaultdict(list)
     for sample in clustered_samples:
@@ -39,7 +40,7 @@ def find_majority_label(clustered_samples):
             'cl_id': cl_id,
             'majority_label': most_common_label
         })
-    print(majority_labels)
+    #print(majority_labels)
     return majority_labels
 
 def compute_evaluation_metrics(clustered_samples):
@@ -52,7 +53,7 @@ def compute_evaluation_metrics(clustered_samples):
     - macro_avg: dict
     - micro_avg: dict
     """
-    print('* - - - COMPUTE EVALUATION METRICS - - - *')
+    #print('* - - - COMPUTE EVALUATION METRICS - - - *')
     majority_labels = find_majority_label(clustered_samples)
     clid_to_majority = {entry['cl_id']: entry['majority_label'] for entry in majority_labels}
 
@@ -92,6 +93,17 @@ def compute_evaluation_metrics(clustered_samples):
         'macro_F1score': sum(m['F1score'] for m in label_metrics.values()) / len(label_metrics),
     }
 
+    # Micro averaging
+    micro_precision = total_TP / (total_TP + total_FP) if (total_TP + total_FP) > 0 else 0.0
+    micro_recall = total_TP / (total_TP + total_FN) if (total_TP + total_FN) > 0 else 0.0
+    micro_F1score = (2 * micro_precision * micro_recall) / (micro_precision + micro_recall) if (micro_precision + micro_recall) > 0 else 0.0
+    
+    micro_avg = {
+        'micro_precision': micro_precision,
+        'micro_recall': micro_recall,
+        'micro_F1score': micro_F1score,
+    }
+
     # Compute total number of samples (denominator n)
     total_support = sum(label_metrics[label]['TP'] + label_metrics[label]['FN'] for label in label_metrics)
 
@@ -116,27 +128,18 @@ def compute_evaluation_metrics(clustered_samples):
         'weighted_F1score': weighted_F1score,
     }
 
-    # Micro averaging
-    micro_precision = total_TP / (total_TP + total_FP) if (total_TP + total_FP) > 0 else 0.0
-    micro_recall = total_TP / (total_TP + total_FN) if (total_TP + total_FN) > 0 else 0.0
-    micro_F1score = (2 * micro_precision * micro_recall) / (micro_precision + micro_recall) if (micro_precision + micro_recall) > 0 else 0.0
-    
-    micro_avg = {
-        'micro_precision': micro_precision,
-        'micro_recall': micro_recall,
-        'micro_F1score': micro_F1score,
-    }
-
+    '''
     # Print results
     print('- - - RESULTS - - -')
     for label, m in label_metrics.items():
         print(f"Label '{label}': TP={m['TP']}, FP={m['FP']}, FN={m['FN']}, "
               f"Precision={m['precision']:.2f}, Recall={m['recall']:.2f}, F1score={m['F1score']:.2f}")
     print("Macro-Averaged Metrics:", macro_avg)
-    print("Weigthed-Averaged Metrics:", weighted_avg)
     print("Micro-Averaged Metrics:", micro_avg)
+    print("Weigthed-Averaged Metrics:", weighted_avg)
+    '''
 
-    return label_metrics, macro_avg, weighted_avg, micro_avg
+    return label_metrics, macro_avg, micro_avg, weighted_avg
 
 # testing
 # samples = [
