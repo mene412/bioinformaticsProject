@@ -2,29 +2,26 @@ from collections import defaultdict, Counter
 
 def find_majority_label(clustered_samples):
     """
-    Based on the label (the cluster id), returns the most present ambient_label present in that cluster
-    
-    Input:
-    - clustered_samples: list of dict, example: 
-        [{
-            'id': id,  # Use filename without extension as ID
-            'kmers': set(all_kmers),
-            'label': -1,
-            'second_label': -1,
-            'ambiental_label': ambiental_label
-        }, ...]
-    Return:
-    - majority_labels: list of dicts, example:
-        [
-            {
-                'cl_id': 1,
-                'majority_label': ambiental_label
-            },
-            ...
-        ]
+    Determines the majority (most frequent) ambiental_label for each cluster.
+
+    This function groups samples by their cluster ID (from the 'center' key),
+    then finds the most common 'ambiental_label' within each cluster.
+
+    Parameters
+    ----------
+    clustered_samples : list of dict
+        Each dictionary represents a sample and should contain at least:
+        - 'center' : the cluster ID the sample belongs to
+        - 'ambiental_label' : the true class label of the sample
+
+    Returns
+    -------
+    majority_labels : list of dict
+        Each dictionary contains:
+        - 'cl_id' : the cluster ID
+        - 'majority_label' : the most frequent ambiental_label within the cluster
     """
     
-    #print('- - - FIND MAJORITY LABELS - - -')
     # Group ambiental_labels by cluster label
     clusters = defaultdict(list)
     for sample in clustered_samples:
@@ -40,20 +37,57 @@ def find_majority_label(clustered_samples):
             'cl_id': cl_id,
             'majority_label': most_common_label
         })
-    #print(majority_labels)
     return majority_labels
 
 def compute_evaluation_metrics(clustered_samples):
     """
-    Computes per-label (ambiental_label) precision, recall,
-    as well as macro and micro averages.
+    Computes per-label (ambiental_label) precision, recall, and F1-score,
+    as well as macro, micro, and weighted averages.
 
-    Returns:
-    - label_metrics: dict per ambiental_label
-    - macro_avg: dict
-    - micro_avg: dict
+    Parameters
+    ----------
+    clustered_samples : list of dict
+        Each dictionary represents a sample and should contain at least the keys:
+        - 'ambiental_label': the ground truth label.
+        - 'center': the ID of the cluster to which the sample was assigned.
+
+    Returns
+    -------
+    label_metrics : dict
+        Dictionary keyed by label. For each label, contains:
+        - 'TP' : int
+            True Positives.
+        - 'FP' : int
+            False Positives.
+        - 'FN' : int
+            False Negatives.
+        - 'precision' : float
+            Precision score for the label.
+        - 'recall' : float
+            Recall score for the label.
+        - 'F1score' : float
+            F1-score for the label.
+
+    macro_avg : dict
+        Contains:
+        - 'macro_precision' : float
+        - 'macro_recall' : float
+        - 'macro_F1score' : float
+
+    micro_avg : dict
+        Contains:
+        - 'micro_precision' : float
+        - 'micro_recall' : float
+        - 'micro_F1score' : float
+
+    weighted_avg : dict
+        Contains:
+        - 'weighted_precision' : float
+        - 'weighted_recall' : float
+        - 'weighted_F1score' : float
     """
-    #print('* - - - COMPUTE EVALUATION METRICS - - - *')
+
+
     majority_labels = find_majority_label(clustered_samples)
     clid_to_majority = {entry['cl_id']: entry['majority_label'] for entry in majority_labels}
 
@@ -95,13 +129,11 @@ def compute_evaluation_metrics(clustered_samples):
 
     # Micro averaging
     micro_precision = total_TP / (total_TP + total_FP) if (total_TP + total_FP) > 0 else 0.0
-    micro_recall = total_TP / (total_TP + total_FN) if (total_TP + total_FN) > 0 else 0.0
-    micro_F1score = (2 * micro_precision * micro_recall) / (micro_precision + micro_recall) if (micro_precision + micro_recall) > 0 else 0.0
     
     micro_avg = {
         'micro_precision': micro_precision,
-        'micro_recall': micro_recall,
-        'micro_F1score': micro_F1score,
+        'micro_recall': micro_precision,
+        'micro_F1score': micro_precision,
     }
 
     # Compute total number of samples (denominator n)
@@ -128,26 +160,4 @@ def compute_evaluation_metrics(clustered_samples):
         'weighted_F1score': weighted_F1score,
     }
 
-    '''
-    # Print results
-    print('- - - RESULTS - - -')
-    for label, m in label_metrics.items():
-        print(f"Label '{label}': TP={m['TP']}, FP={m['FP']}, FN={m['FN']}, "
-              f"Precision={m['precision']:.2f}, Recall={m['recall']:.2f}, F1score={m['F1score']:.2f}")
-    print("Macro-Averaged Metrics:", macro_avg)
-    print("Micro-Averaged Metrics:", micro_avg)
-    print("Weigthed-Averaged Metrics:", weighted_avg)
-    '''
-
     return label_metrics, macro_avg, micro_avg, weighted_avg
-
-# testing
-# samples = [
-#     {'id': 'a', 'kmers': {'A'}, 'label': 0, 'second_label': -1, 'ambiental_label': 'indoor'},
-#     {'id': 'b', 'kmers': {'B'}, 'label': 0, 'second_label': -1, 'ambiental_label': 'indoor'},
-#     {'id': 'c', 'kmers': {'C'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'outdoor'},
-#     {'id': 'd', 'kmers': {'D'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'outdoor'},
-#     {'id': 'e', 'kmers': {'E'}, 'label': 1, 'second_label': -1, 'ambiental_label': 'indoor'},
-# ]    
-
-# compute_evaluation_metrics(samples)
