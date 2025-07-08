@@ -31,7 +31,7 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, distance_matrix):
             for i, center_idx in enumerate(centers):
                 dists.append((get_cached_distance(idx, center_idx), i)) # index of medoid in centers, center_idx is the index in `samples`
 
-            dists.sort()  # sort by distance --> k logk --> could be done in less time
+            dists.sort()  # sort by distance
             # Set label as nearest medoid's position in `centers`
             sample['center'] = dists[0][1]  # index in centers list
             cost += dists[0][0]  # add distance to cost
@@ -66,11 +66,9 @@ def fastCLARANS(samples, k, numlocal, maxneighbor, distance_matrix):
             delta_TS = [0.0] * k  # delta_TS[i] = loss function if swapping Op with medoid m[i]
 
             # take one center at random and take another from samples
-            # Om = random.choice(current)  # medoid to be changed
             Op = random.choice([idx for idx in range(n) if idx not in current]) # new medoid to be added
 
             d_Op_to_center = get_cached_distance(Op, current[samples[Op]['center']])  # distance from Op to its medoid
-            # print("Update all delta_TS...")
             for i in range(k):
                 delta_TS[i] -= d_Op_to_center # update delta_TS for all medoids
 
@@ -139,8 +137,8 @@ def main():
             label = line.split(":")[1].strip()
             samples.append({
                 'id': name,
-                'center': -1,  # or some default value
-                'second': -1,  # or some default value
+                'center': -1,
+                'second': -1,
                 'ambiental_label': label,
             })
 
